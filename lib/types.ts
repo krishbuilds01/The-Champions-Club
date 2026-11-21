@@ -70,9 +70,22 @@ export type InvoiceDTO = {
   billedTo: string;
   detail: string;
   amount: number;
+  taxRate: number | null;
+  taxAmount: number | null;
   status: "UNPAID" | "PAID";
   issuedOn: string;
   paidAt: string | null;
+};
+
+export type TaxSummaryDTO = {
+  from: string;
+  to: string;
+  invoiced: number;
+  invoiceCount: number;
+  invoiceTax: number;
+  payrollTax: number;
+  payrollCount: number;
+  netTax: number;
 };
 
 export type ExpenseDTO = {

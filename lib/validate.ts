@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { badRequest } from "./errors";
+import { isISODate } from "./format";
 
 // Every API input is parsed here, in one place. Handlers never read raw
 // request bodies.
@@ -51,10 +52,6 @@ export const memberInput = z.object({
     .optional(),
 });
 
-export const renewInput = z.object({
-  payMethod: z.enum(["CASH", "CARD", "UPI", "ONLINE"]).optional().default("CASH"),
-});
-
 export const itemsInput = z
   .array(z.object({ productId: z.number().int().positive(), qty: z.number().int().min(1).max(99) }))
   .min(1, "Nothing in the order yet");
@@ -75,6 +72,8 @@ export const invoiceInput = z.object({
   billedTo: z.string().trim().min(2, "Who is this bill for?").max(80),
   detail: z.string().trim().max(200).optional().default(""),
   amount: z.number().int().positive("The invoice needs an amount").max(100000000),
+  // Optional tax percent; the service computes the tax amount from it.
+  taxRate: z.number().int().min(0).max(100).optional(),
 });
 
 export const expenseInput = z.object({

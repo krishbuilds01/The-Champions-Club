@@ -26,16 +26,25 @@ export async function listInvoices(): Promise<InvoiceDTO[]> {
   rows.sort((a, b) => Number(a.status === "PAID") - Number(b.status === "PAID"));
   return rows.map((r) => ({
     id: r.id, billedTo: r.billedTo, detail: r.detail, amount: r.amount,
+    taxRate: r.taxRate, taxAmount: r.taxAmount,
     status: r.status === "PAID" ? "PAID" : "UNPAID",
     issuedOn: iso(r.issuedOn), paidAt: r.paidAt ? iso(r.paidAt) : null,
   }));
 }
 
-export async function createInvoice(input: { billedTo: string; detail: string; amount: number }): Promise<InvoiceDTO> {
+export async function createInvoice(input: { billedTo: string; detail: string; amount: number; taxRate?: number }): Promise<InvoiceDTO> {
   if (!positiveInt(input.amount)) throw badRequest("The invoice needs a positive amount");
-  const r = await db.invoice.create({ data: input });
+  // The tax fields existed in the schema but nothing ever set them, so
+  // tax reporting always read zero. A rate, when given, is applied
+  // here — the tax amount is computed, never trusted from the client.
+  if (input.taxRate !== undefined && (!Number.isInteger(input.taxRate) || input.taxRate < 0 || input.taxRate > 100))
+    throw badRequest("Tax rate must be a whole percent between 0 and 100");
+  const taxRate = input.taxRate ?? null;
+  const taxAmount = taxRate === null ? null : Math.round((input.amount * taxRate) / 100);
+  const r = await db.invoice.create({ data: { billedTo: input.billedTo, detail: input.detail, amount: input.amount, taxRate, taxAmount } });
   return {
     id: r.id, billedTo: r.billedTo, detail: r.detail, amount: r.amount,
+    taxRate: r.taxRate, taxAmount: r.taxAmount,
     status: "UNPAID", issuedOn: iso(r.issuedOn), paidAt: null,
   };
 }
@@ -47,6 +56,7 @@ export async function markInvoicePaid(id: number): Promise<InvoiceDTO> {
   const r = await db.invoice.update({ where: { id }, data: { status: "PAID", paidAt: new Date() } });
   return {
     id: r.id, billedTo: r.billedTo, detail: r.detail, amount: r.amount,
+    taxRate: r.taxRate, taxAmount: r.taxAmount,
     status: "PAID", issuedOn: iso(r.issuedOn), paidAt: r.paidAt ? iso(r.paidAt) : null,
   };
 }
