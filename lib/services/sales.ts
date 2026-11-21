@@ -40,12 +40,20 @@ export async function createOrder(input: {
     throw badRequest("Add the full delivery address");
   if (input.payOnline && !razorpayConfigured())
     throw badRequest("Online payment is not switched on yet. Pay at the counter instead.");
+  // Merge duplicate lines for the same product, so the order does not
+  // fail on the unique (orderId, productId) key.
+  const items = input.items.reduce<Item[]>((acc, i) => {
+    const existing = acc.find((x) => x.productId === i.productId);
+    if (existing) existing.qty += i.qty;
+    else acc.push({ ...i });
+    return acc;
+  }, []);
   const member = await findMemberByName(input.name);
-  const active = member && memberState(member.expiresOn) === "active";
+  const active = member && memberState(member.expiresOn) !== "expired";
   const discountPct = active ? member.plan.shopDiscount : 0;
 
   const created = await db.$transaction(async (tx) => {
-    const lines = await priceItems(input.items, "GEAR");
+    const lines = await priceItems(items, "GEAR");
     for (const l of lines) {
       if (l.product.stock !== null && l.qty > l.product.stock)
         throw conflict(
@@ -75,8 +83,13 @@ export async function createOrder(input: {
       include: { items: { include: { product: true } } },
     });
     for (const l of lines) {
-      if (l.product.stock !== null)
-        await tx.product.update({ where: { id: l.product.id }, data: { stock: { decrement: l.qty } } });
+      if (l.product.stock !== null) {
+        const updated = await tx.product.updateMany({
+          where: { id: l.product.id, stock: { gte: l.qty } },
+          data: { stock: { decrement: l.qty } },
+        });
+        if (updated.count === 0) throw conflict(`${l.product.name} is out of stock`);
+      }
     }
     return order;
   });
@@ -254,13 +267,13 @@ export async function settleTab(id: number, payMethod: "CASH" | "CARD" | "UPI"):
   // settle time. Nobody types a discount, and nobody can inflate one.
   const member = tab.member;
   const discountPct =
-    member && memberState(member.expiresOn) === "active" ? member.plan.barDiscount : 0;
+    member && memberState(member.expiresOn) !== "expired" ? member.plan.barDiscount : 0;
   const discount = Math.round((tab.subtotal * discountPct) / 100);
   const updated = await db.tab.update({
     where: { id },
     data: {
       status: "SETTLED",
-      planCode: discountPct && member ? member.plan.code : "walkin",
+      planCode: member ? member.plan.code : "walkin",
       discountPct,
       total: tab.subtotal - discount,
       payMethod,

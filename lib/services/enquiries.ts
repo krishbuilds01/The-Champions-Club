@@ -50,7 +50,7 @@ export async function createEnquiry(input: {
 }
 
 export async function listEnquiries(): Promise<EnquiryDTO[]> {
-  const rows = await db.enquiry.findMany({ orderBy: [{ status: "asc" }, { createdAt: "desc" }] });
+  const rows = await db.enquiry.findMany({ orderBy: { createdAt: "desc" } });
   return rows.map(toDTO);
 }
 
@@ -60,6 +60,8 @@ export async function updateEnquiry(
 ): Promise<EnquiryDTO> {
   const row = await db.enquiry.findUnique({ where: { id } });
   if (!row) throw notFound("No such enquiry");
+  if (input.status === "CONVERTED")
+    throw badRequest("Use the convert action to turn an enquiry into a member");
   const updated = await db.enquiry.update({ where: { id }, data: input });
   return toDTO(updated);
 }
@@ -94,8 +96,11 @@ export async function convertEnquiry(id: number, planCode: string): Promise<Enqu
   const row = await db.enquiry.findUnique({ where: { id } });
   if (!row) throw notFound("No such enquiry");
   if (row.status === "CONVERTED" || row.memberId) throw conflict("That enquiry already became a member");
-  const phone = row.contact.replace(/\D/g, "").length >= 10 ? row.contact : "";
-  const member = await createMember({ name: row.name, phone, planCode }).catch((e) => {
+  const contact = row.contact.trim();
+  const isEmail = contact.includes("@");
+  const phone = !isEmail && contact.replace(/\D/g, "").length >= 10 ? contact : "";
+  const email = isEmail ? contact : undefined;
+  const member = await createMember({ name: row.name, phone, email, planCode }).catch((e) => {
     throw e instanceof Error ? e : badRequest("Could not create the member");
   });
   const updated = await db.enquiry.update({

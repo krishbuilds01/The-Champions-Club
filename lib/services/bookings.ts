@@ -83,16 +83,18 @@ export async function createBooking(input: {
   start: number;
   name: string;
   phone: string;
-  type: "REGULAR" | "TRIAL";
+  type: "REGULAR" | "TRIAL" | "FRIDAY_SOCIAL";
 }): Promise<BookingDTO> {
   if (!isISODate(input.date)) throw badRequest("Date must be YYYY-MM-DD");
   if (input.date < todayISO()) throw badRequest("That date has already passed");
-  if (input.date === todayISO() && input.start + BOOKING_LEN <= istMinutesNow())
+  if (input.date === todayISO() && input.start <= istMinutesNow())
     throw badRequest("That time has already passed today");
   if (input.start < OPEN_MIN || input.start > LAST_START_MIN || input.start % SLOT_STEP !== 0)
     throw badRequest("Start times run on the half hour, 6 AM to 9 PM");
   if (input.type === "TRIAL" && input.phone.replace(/\D/g, "").length < 10)
     throw badRequest("Add a phone number the desk can reach you on");
+  if (input.type === "FRIDAY_SOCIAL" && new Date(`${input.date}T00:00:00.000Z`).getUTCDay() !== 5)
+    throw badRequest("Friday Social Play is only on Fridays");
 
   const court = await db.court.findUnique({ where: { id: input.courtId } });
   if (!court) throw notFound("No such court");
@@ -111,18 +113,23 @@ export async function createBooking(input: {
     await tx.$queryRaw`SELECT id FROM "Court" WHERE id = ${court.id} FOR UPDATE`;
 
     const sameDay = await tx.booking.findMany({
-      where: { courtId: court.id, date: day, state: "BOOKED" },
+      where: {
+        courtId: court.id,
+        date: day,
+        state: "BOOKED",
+        ...(input.type === "FRIDAY_SOCIAL" ? { type: { not: "FRIDAY_SOCIAL" } } : {}),
+      },
       select: { start: true },
     });
     if (sameDay.some((b) => overlaps(b.start, input.start)))
       throw conflict("That court is already booked at that time");
 
-    if (input.type !== "TRIAL") {
+    if (input.type === "REGULAR") {
       const mine = await tx.booking.count({
         where: {
           date: day,
           state: "BOOKED",
-          type: { not: "FRIDAY_SOCIAL" },
+          type: "REGULAR",
           who: { equals: input.name, mode: "insensitive" },
         },
       });

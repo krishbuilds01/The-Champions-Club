@@ -91,8 +91,7 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div className="mt-16 flex flex-wrap gap-x-12 gap-y-5 border-t border-white/20 pt-6 text-[10px] uppercase tracking-[.18em] text-white/55 lg:absolute lg:bottom-20 lg:right-12 lg:mt-0 lg:w-[430px]">
-              <span className="flex items-center gap-2"><Icon name="pin" className="h-4 w-4 text-[#dfff45]" />Jalandhar, Punjab</span>
+            <div className="mt-16 flex flex-wrap gap-x-12 gap-y-5 border-t border-white/20 pt-6 text-[10px] uppercase tracking-[.18em] text-white/55 lg:absolute lg:bottom-20 lg:right-12 lg:mt-0 lg:w-auto">
               <span className="flex items-center gap-2"><Icon name="clock" className="h-4 w-4 text-[#dfff45]" />Open daily 6 AM – 10 PM</span>
             </div>
           </div>

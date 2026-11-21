@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { notFound } from "../errors";
+import { conflict, notFound } from "../errors";
 import type { ExpenseDTO, InvoiceDTO, PayrollDTO } from "../types";
 
 // Owner finance, deliberately light: bills out, money out, staff pay.
@@ -28,6 +28,7 @@ export async function createInvoice(input: { billedTo: string; detail: string; a
 export async function markInvoicePaid(id: number): Promise<InvoiceDTO> {
   const row = await db.invoice.findUnique({ where: { id } });
   if (!row) throw notFound("No such invoice");
+  if (row.status === "PAID") throw conflict("That invoice is already paid");
   const r = await db.invoice.update({ where: { id }, data: { status: "PAID", paidAt: new Date() } });
   return {
     id: r.id, billedTo: r.billedTo, detail: r.detail, amount: r.amount,
@@ -70,6 +71,7 @@ export async function createPayroll(input: { staffName: string; month: string; s
 export async function markPayrollPaid(id: number): Promise<PayrollDTO> {
   const row = await db.payroll.findUnique({ where: { id } });
   if (!row) throw notFound("No such payroll record");
+  if (row.status === "PAID") throw conflict("That payroll record is already paid");
   const r = await db.payroll.update({ where: { id }, data: { status: "PAID" } });
   return {
     id: r.id, staffName: r.staffName, month: r.month, salary: r.salary,

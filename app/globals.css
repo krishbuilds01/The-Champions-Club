@@ -340,3 +340,44 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
 .table-tile.occupied { border-color: var(--pine); background: rgba(22, 48, 33, 0.05); }
 .table-tile[aria-pressed="true"] { outline: 2px solid var(--volt-dark); outline-offset: 1px; }
 @media (max-width: 860px) { .tables-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ---- Club shop: pine hero with the club's own photo, volt accents ---- */
+.shop-page { background: var(--paper); }
+.shop-hero { position: relative; overflow: hidden; background: var(--pine-deep); color: #fff; }
+.shop-hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% center; }
+.shop-hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,28,17,.94) 0%, rgba(9,30,18,.74) 40%, rgba(9,29,18,.15) 75%), linear-gradient(0deg, rgba(7,23,14,.72) 0%, transparent 45%); }
+.shop-hero-in { position: relative; padding-top: 72px; padding-bottom: 56px; }
+.shop-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--volt); display: flex; align-items: center; gap: 10px; }
+.shop-eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--volt); flex: none; }
+.shop-title { font-family: var(--font-display), sans-serif; font-size: 64px; font-weight: 700; text-transform: uppercase; line-height: .9; letter-spacing: -.02em; margin-top: 14px; }
+.shop-sub { max-width: 560px; margin-top: 14px; color: rgba(255,255,255,.75); font-size: 15px; line-height: 1.6; }
+.shop-hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.shop-hero-chips span { padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.18); font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+.shop-body { padding-top: 32px; }
+.shop-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+.shop-cats { display: flex; gap: 8px; flex-wrap: wrap; }
+.shop-cats button { padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.shop-cats button[aria-pressed="true"] { background: var(--pine); color: var(--volt); border-color: var(--pine); }
+.shop-search { max-width: 260px; margin-left: auto; }
+.product-card { padding: 0; overflow: hidden; }
+.product-media { position: relative; aspect-ratio: 4 / 3; background: linear-gradient(140deg, var(--pine) 0%, var(--pine-deep) 55%, #2a4a35 100%); overflow: hidden; }
+.product-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
+.product-card:hover .product-media img { transform: scale(1.04); }
+.product-media .p-cat { position: absolute; left: 12px; bottom: 12px; padding: 5px 10px; border-radius: 999px; background: rgba(16,37,26,.85); color: var(--volt); font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.product-media .p-badge { position: absolute; right: 12px; top: 12px; padding: 5px 10px; border-radius: 999px; background: #fff; color: var(--pine); font-size: 11px; font-weight: 700; }
+.product-media .p-badge.low { background: var(--volt); color: var(--pine); }
+.p-body { padding: 20px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.p-body .p-foot { margin-top: auto; padding-top: 14px; }
+@media (max-width: 640px) {
+  .shop-title { font-size: 44px; }
+  .shop-hero-in { padding-top: 56px; padding-bottom: 40px; }
+  .shop-search { max-width: none; width: 100%; margin-left: 0; }
+}
+
+/* ---- Bar & Café: same hero system as the shop, warm café photo ---- */
+.bar-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.bar-step { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); }
+.bar-step .step-n { margin-bottom: 8px; }
+.bar-step b { display: block; font-family: var(--font-display), sans-serif; font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.bar-step p { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+@media (max-width: 640px) { .bar-steps { grid-template-columns: 1fr; } }

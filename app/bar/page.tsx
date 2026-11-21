@@ -13,6 +13,33 @@ const methods = [
   { code: "UPI", label: "UPI" },
 ] as const;
 
+// Menu photos, in the club's own colours. Hero art is a warm café photo;
+// dish photos are stable Unsplash images, checked live, with a pine
+// gradient behind them if one ever fails.
+const menuImage = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("cold coffee")) return "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("protein shake")) return "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("sandwich")) return "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("fries")) return "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("iced tea")) return "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("lime")) return "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("coffee") || n.includes("shake")) return "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("tea") || n.includes("soda") || n.includes("juice")) return "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80&auto=format&fit=crop";
+  return "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80&auto=format&fit=crop";
+};
+
+const menuCategory = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("coffee") || n.includes("shake")) return "Coffee & shakes";
+  if (n.includes("sandwich") || n.includes("fries")) return "Food";
+  return "Drinks";
+};
+
+const barCategories = ["All", "Drinks", "Coffee & shakes", "Food"] as const;
+
+const barHeroImage = "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1600&q=80&auto=format&fit=crop";
+
 export default function Bar() {
   const menu = useApi(() => api.products("BAR"));
   const plans = useApi(() => api.plans());
@@ -24,9 +51,16 @@ export default function Bar() {
   const [draft, setDraft] = useState<Record<number, number>>({});
   const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [category, setCategory] = useState<(typeof barCategories)[number]>("All");
+  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
 
   const items = menu.data ?? [];
+  const shown = items.filter(
+    (p) =>
+      (category === "All" || menuCategory(p.name) === category) &&
+      p.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
   const open = (tabs ?? []).filter((t) => t.status === "OPEN");
   const settled = (tabs ?? []).filter((t) => t.status === "SETTLED");
   const tab = open.find((t) => t.id === selected) ?? open[0] ?? null;
@@ -103,11 +137,31 @@ export default function Bar() {
   }
 
   return (
-    <main className="wrap page">
-      <div className="page-head">
-        <p className="page-eyebrow">Clubhouse</p>
-        <h1 className="page-title">Bar &amp; Café</h1>
-        <p className="sub">Open a tab, add as they order, settle before they leave. The member&apos;s plan discount applies itself at settle.</p>
+    <main className="shop-page">
+      <section className="shop-hero">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={barHeroImage} alt="Warm café counter at Champions Club" className="shop-hero-img" />
+        <div className="shop-hero-shade" />
+        <div className="wrap shop-hero-in">
+          <p className="shop-eyebrow">Clubhouse · Bar &amp; Café</p>
+          <h1 className="shop-title">Bar &amp; Café</h1>
+          <p className="shop-sub">Open a tab, add as they order, settle before they leave. The member&apos;s plan discount applies itself at settle — no asking, no maths at the table.</p>
+          <div className="shop-hero-chips">
+            <span>Run a tab, settle before you leave</span>
+            <span>Members save up to 20%</span>
+            <span>Cash · Card · UPI</span>
+          </div>
+        </div>
+      </section>
+
+      <div className="wrap page shop-body">
+      <div className="shop-toolbar">
+        <div className="shop-cats" role="group" aria-label="Filter the menu by category">
+          {barCategories.map((c) => (
+            <button key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>
+          ))}
+        </div>
+        <input className="shop-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the menu…" aria-label="Search the menu" />
       </div>
 
       {menu.loading ? (
@@ -121,11 +175,18 @@ export default function Bar() {
           <div className="notice err" role="alert">
             The till is for bar staff. <Link className="text-link" href="/login">Sign in</Link> to run tabs.
           </div>
-          <div className="rows" style={{ marginTop: 20 }}>
-            {items.map((p) => (
-              <div className="row-item" key={p.id}>
-                <div className="row-main"><p className="row-name">{p.name}</p></div>
-                <span className="num" style={{ fontSize: 15 }}>{inr(p.price)}</span>
+          <div className="shop-grid" style={{ marginTop: 20 }}>
+            {shown.map((p) => (
+              <div className="product-card" key={p.id}>
+                <div className="product-media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={menuImage(p.name)} alt={p.name} loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  <span className="p-cat">{menuCategory(p.name)}</span>
+                </div>
+                <div className="p-body">
+                  <p className="p-name">{p.name}</p>
+                  <p className="p-price">{inr(p.price)}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -222,15 +283,26 @@ export default function Bar() {
                 </div>
               </div>
 
-              <div className="rows" style={{ marginTop: 20 }}>
-                {items.map((p) => (
-                  <div className="row-item" key={p.id}>
-                    <div className="row-main"><p className="row-name">{p.name}</p></div>
-                    <span className="num" style={{ fontSize: 15 }}>{inr(p.price)}</span>
-                    <div className="stepper">
-                      <button aria-label={`One less ${p.name}`} disabled={!(draft[p.id] ?? 0)} onClick={() => set(p.id, (draft[p.id] ?? 0) - 1)}>−</button>
-                      <b className="num">{draft[p.id] ?? 0}</b>
-                      <button aria-label={`One more ${p.name}`} onClick={() => set(p.id, (draft[p.id] ?? 0) + 1)}>+</button>
+              <div className="sec-head" style={{ marginTop: 28 }}><h2>The menu</h2></div>
+              <div className="shop-grid">
+                {shown.map((p) => (
+                  <div className={`product-card${(draft[p.id] ?? 0) > 0 ? " picked" : ""}`} key={p.id}>
+                    <div className="product-media">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={menuImage(p.name)} alt={p.name} loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                      <span className="p-cat">{menuCategory(p.name)}</span>
+                    </div>
+                    <div className="p-body">
+                      <p className="p-name">{p.name}</p>
+                      <p className="p-price">{inr(p.price)}</p>
+                      <div className="p-foot">
+                        <span className="muted">{(draft[p.id] ?? 0) > 0 ? <><span className="num">{inr((draft[p.id] ?? 0) * p.price)}</span> on this tab</> : "Add to the tab"}</span>
+                        <div className="stepper">
+                          <button aria-label={`One less ${p.name}`} disabled={!(draft[p.id] ?? 0)} onClick={() => set(p.id, (draft[p.id] ?? 0) - 1)}>−</button>
+                          <b className="num">{draft[p.id] ?? 0}</b>
+                          <button aria-label={`One more ${p.name}`} onClick={() => set(p.id, (draft[p.id] ?? 0) + 1)}>+</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -266,6 +338,7 @@ export default function Bar() {
           )}
         </>
       )}
+      </div>
     </main>
   );
 }

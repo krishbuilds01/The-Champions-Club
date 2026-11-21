@@ -46,7 +46,7 @@ export async function getDashboard(date: string): Promise<DashboardDTO> {
     sums(addDaysISO(date, -6), date),
     sums(addDaysISO(date, -29), date),
     db.order.findMany({
-      where: { createdAt: { gte: istDayStart(date), lt: istDayStart(addDaysISO(date, 1)) } },
+      where: { createdAt: { gte: istDayStart(date), lt: istDayStart(addDaysISO(date, 1)) }, payState: { not: "PENDING" } },
       select: { total: true, payMethod: true },
     }),
     db.tab.findMany({

@@ -160,7 +160,7 @@ model Tab {
   member      Member?   @relation(fields: [memberId], references: [id])
   who         String    @default("") // name on the tab
   tableNo     Int?
-  status      TabState  @default(SETTLED)
+  status      TabState  @default(OPEN)
   planCode    String    @default("walkin") // plan the discount came from, kept as a snapshot
   discountPct Int       @default(0)
   subtotal    Int       @default(0)

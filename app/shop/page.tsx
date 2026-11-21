@@ -12,6 +12,34 @@ const methods = [
   { code: "UPI", label: "UPI" },
 ] as const;
 
+// Product photos, in the club's own colours. Hero art is the club's own
+// /hero.jpg; gear photos are stable Pexels / Unsplash images, checked
+// live, with a pine-to-volt gradient behind them if one ever fails.
+const productImage = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("cricket ball")) return "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("tennis ball")) return "https://images.pexels.com/photos/27152935/pexels-photo-27152935/free-photo-of-tennis-ball-and-racket-on-a-field.jpeg?w=600";
+  if (n.includes("ball")) return "https://images.pexels.com/photos/27152935/pexels-photo-27152935/free-photo-of-tennis-ball-and-racket-on-a-field.jpeg?w=600";
+  if (n.includes("racket")) return "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("bat")) return "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("shoe")) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("t-shirt") || n.includes("shirt")) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("bag")) return "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80&auto=format&fit=crop";
+  if (n.includes("bottle")) return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&q=80&auto=format&fit=crop";
+  return "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&q=80&auto=format&fit=crop";
+};
+
+const productCategory = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("racket") || n.includes("bat")) return "Rackets & bats";
+  if (n.includes("ball")) return "Balls";
+  if (n.includes("shoe")) return "Footwear";
+  if (n.includes("t-shirt") || n.includes("shirt")) return "Apparel";
+  return "Accessories";
+};
+
+const categories = ["All", "Rackets & bats", "Balls", "Footwear", "Apparel", "Accessories"] as const;
+
 export default function Shop() {
   const products = useApi(() => api.products("GEAR"));
   const [cart, setCart] = useState<Record<number, number>>({});
@@ -22,6 +50,8 @@ export default function Shop() {
   const [fulfilment, setFulfilment] = useState<"PICKUP" | "DELIVERY">("PICKUP");
   const [address, setAddress] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [category, setCategory] = useState<(typeof categories)[number]>("All");
+  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
 
   const lookup = useApi(
@@ -40,9 +70,14 @@ export default function Shop() {
       .catch(() => setStaffOrders(null));
   }, []);
   const member = lookup.data?.member ?? null;
-  const discountPct = member && member.state === "active" ? member.shopDiscount : 0;
+  const discountPct = member && member.state !== "expired" ? member.shopDiscount : 0;
 
-  const gear = products.data ?? [];
+  const allGear = products.data ?? [];
+  const gear = allGear.filter(
+    (p) =>
+      (category === "All" || productCategory(p.name) === category) &&
+      p.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
   const subtotal = gear.reduce((s, p) => s + (cart[p.id] ?? 0) * p.price, 0);
   const discount = Math.round((subtotal * discountPct) / 100);
   const total = subtotal - discount;
@@ -97,11 +132,31 @@ export default function Shop() {
   }
 
   return (
-    <main className="wrap page">
-      <div className="page-head">
-        <p className="page-eyebrow">Pro shop</p>
-        <h1 className="page-title">Club shop</h1>
-        <p className="sub">The same shelf as the counter. What is listed here is what is actually in stock.</p>
+    <main className="shop-page">
+      <section className="shop-hero">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero.jpg" alt="Padel player on court at Champions Club" className="shop-hero-img" />
+        <div className="shop-hero-shade" />
+        <div className="wrap shop-hero-in">
+          <p className="shop-eyebrow">Pro shop · Rackets · Balls · Shoes · Apparel</p>
+          <h1 className="shop-title">Club shop</h1>
+          <p className="shop-sub">The same shelf as the counter. What is listed here is what is actually in stock — order from home, collect at the club, or have it delivered.</p>
+          <div className="shop-hero-chips">
+            <span>Pickup at the front desk</span>
+            <span>Delivery to your door</span>
+            <span>Members save up to 15%</span>
+          </div>
+        </div>
+      </section>
+
+      <div className="wrap page shop-body">
+      <div className="shop-toolbar">
+        <div className="shop-cats" role="group" aria-label="Filter by category">
+          {categories.map((c) => (
+            <button key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>
+          ))}
+        </div>
+        <input className="shop-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the shelf…" aria-label="Search products" />
       </div>
 
       {products.loading ? (
@@ -115,6 +170,14 @@ export default function Shop() {
           <div className="shop-grid">
             {gear.map((p) => (
               <div className={`product-card${p.stock === 0 ? " out" : ""}${(cart[p.id] ?? 0) > 0 ? " picked" : ""}`} key={p.id}>
+                <div className="product-media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={productImage(p.name)} alt={p.name} loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  <span className="p-cat">{productCategory(p.name)}</span>
+                  {p.stock === 0 && <span className="p-badge">Sold out</span>}
+                  {p.stock !== null && p.stock > 0 && p.stock <= p.lowAt && <span className="p-badge low">Only {p.stock} left</span>}
+                </div>
+                <div className="p-body">
                 <p className="p-name">{p.name}</p>
                 <p className={`stock-line${p.stock === 0 ? " out" : p.stock !== null && p.stock <= p.lowAt ? " low" : ""}`}>
                   {p.stock === 0 ? "Out of stock" : p.stock !== null && p.stock <= p.lowAt ? `Only ${p.stock} left` : `${p.stock} in stock`}
@@ -128,6 +191,7 @@ export default function Shop() {
                     <button aria-label={`One more ${p.name}`} disabled={p.stock === 0 || (cart[p.id] ?? 0) >= (p.stock ?? 0)} onClick={() => set(p.id, (cart[p.id] ?? 0) + 1, p.stock ?? 0)}>+</button>
                   </div>
                 </div>
+                </div>
               </div>
             ))}
           </div>
@@ -139,7 +203,7 @@ export default function Shop() {
               <input id="s-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Members: use your registered name" />
               {name.trim().length >= 3 && !lookup.loading && member ? (
                 <p className={`member-strip${member.state === "active" ? "" : " warn"}`} role="status">
-                  {member.state === "active"
+                  {member.state !== "expired"
                     ? `${member.name}, ${member.plan} plan, ${member.shopDiscount}% off in the shop.`
                     : `${member.name}, ${member.plan} plan, ${member.state}. Discounts pause while the plan is not active.`}
                 </p>
@@ -222,6 +286,7 @@ export default function Shop() {
           </div>
         </>
       )}
+      </div>
     </main>
   );
 }
