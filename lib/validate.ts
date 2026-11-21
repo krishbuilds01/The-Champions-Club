@@ -29,9 +29,17 @@ export const trialInput = bookingInput.extend({
   type: z.enum(["TRIAL"]).optional().default("TRIAL"),
 });
 
+export const memberBookingInput = bookingInput.pick({ courtId: true, date: true, start: true });
+
+export const memberLoginInput = z.object({
+  email: z.string().trim().email("That email does not look right").max(120),
+  password: z.string().min(1, "Add your password").max(200),
+});
+
 export const memberInput = z.object({
   name: z.string().trim().min(1, "The member needs a name").max(80),
   phone: z.string().trim().max(20).optional().default(""),
+  email: z.string().trim().email("That email does not look right").max(120).optional(),
   planCode: z.string().min(1),
 });
 
@@ -44,11 +52,15 @@ export const orderInput = z.object({
   name: z.string().trim().min(1, "Your name is missing").max(80),
   phone: phone,
   payMethod: z.enum(["CASH", "CARD", "UPI"]),
+  fulfilment: z.enum(["PICKUP", "DELIVERY"]).optional().default("PICKUP"),
+  address: z.string().trim().max(300).optional(),
 });
+
+export const memberOrderInput = orderInput.pick({ items: true, payMethod: true, fulfilment: true, address: true });
 
 export const tabOpenInput = z.object({
   who: z.string().trim().min(1, "The tab needs a name").max(80),
-  tableNo: z.number().int().min(1).max(99).optional(),
+  tableNo: z.number().int().min(1).max(8).optional(),
 });
 
 export const tabItemsInput = z.object({ items: itemsInput });

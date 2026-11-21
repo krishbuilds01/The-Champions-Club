@@ -76,6 +76,8 @@ model Member {
   id        Int       @id @default(autoincrement())
   name      String
   phone     String    @default("")
+  email     String?   @unique // portal login; set by the front desk
+  passwordHash String? // portal password; defaults to the phone number
   planId    Int
   plan      Plan      @relation(fields: [planId], references: [id])
   joinedOn  DateTime  @db.Date
@@ -128,6 +130,8 @@ model Order {
   discount  Int         @default(0)
   total     Int
   payMethod PayMethod
+  fulfilment String     @default("PICKUP") // PICKUP | DELIVERY
+  address   String? // delivery address, set only for DELIVERY
   createdAt DateTime    @default(now())
   items     OrderItem[]
 

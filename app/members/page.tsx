@@ -8,7 +8,7 @@ const stateLabel = { active: "Active", expiring: "Expiring soon", expired: "Expi
 
 export default function Members() {
   const [q, setQ] = useState("");
-  const [form, setForm] = useState({ name: "", phone: "", planCode: "silver" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", planCode: "silver" });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const members = useApi(() => api.members(q || undefined), [q]);
@@ -22,10 +22,10 @@ export default function Members() {
     setBusy(true);
     setMsg(null);
     try {
-      const m = await api.createMember({ name: form.name.trim(), phone: form.phone.trim(), planCode: form.planCode });
+      const m = await api.createMember({ name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() || undefined, planCode: form.planCode });
       const plan = plans.data?.find((p) => p.code === form.planCode);
-      setMsg({ ok: true, text: `${m.name} added on ${m.plan}. The plan runs ${plan?.termDays ?? 365} days from today.` });
-      setForm({ name: "", phone: "", planCode: "silver" });
+      setMsg({ ok: true, text: `${m.name} added on ${m.plan}. The plan runs ${plan?.termDays ?? 365} days from today.${m.email ? " They can sign in to the member portal with their phone number as the first password." : ""}` });
+      setForm({ name: "", phone: "", email: "", planCode: "silver" });
       void members.reload();
     } catch (e) {
       setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Adding failed. Try again." });
@@ -93,6 +93,10 @@ export default function Members() {
             </div>
           </div>
           <div className="field-row" style={{ marginTop: 16, alignItems: "end" }}>
+            <div>
+              <label htmlFor="m-email">Email (for the member portal)</label>
+              <input id="m-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Optional" />
+            </div>
             <div>
               <label htmlFor="m-plan">Plan</label>
               <select id="m-plan" value={form.planCode} onChange={(e) => setForm({ ...form, planCode: e.target.value })}>

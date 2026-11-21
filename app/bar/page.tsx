@@ -19,7 +19,7 @@ export default function Bar() {
   const [tabs, setTabs] = useState<TabDTO[] | null>(null);
   const [tabsErr, setTabsErr] = useState("");
   const [who, setWho] = useState("");
-  const [tableNo, setTableNo] = useState("");
+  const [tableNo, setTableNo] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [draft, setDraft] = useState<Record<number, number>>({});
   const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
@@ -52,9 +52,9 @@ export default function Bar() {
     setBusy(true);
     setMsg(null);
     try {
-      const t = await api.openTab({ who: who.trim(), tableNo: tableNo ? Number(tableNo) : undefined });
+      const t = await api.openTab({ who: who.trim(), tableNo: tableNo ?? undefined });
       setWho("");
-      setTableNo("");
+      setTableNo(null);
       setSelected(t.id);
       setMsg({ ok: true, text: `Tab open for ${t.who}${t.tableNo ? `, table ${t.tableNo}` : ""}.` });
       await loadTabs();
@@ -132,17 +132,42 @@ export default function Bar() {
         </>
       ) : (
         <>
+          <section aria-label="Tables" style={{ marginBottom: 24 }}>
+            <div className="sec-head"><h2>Tables</h2></div>
+            <div className="tables-grid">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+                const t = open.find((x) => x.tableNo === n);
+                return t ? (
+                  <button key={n} className="table-tile occupied" aria-pressed={tab?.id === t.id} onClick={() => setSelected(t.id)}>
+                    <span className="t-no">T{n}</span>
+                    <span className="t-meta">{t.who} · <span className="num">{inr(t.subtotal)}</span>{t.items.length ? ` · ${t.items.reduce((s, i) => s + i.qty, 0)} items` : ""}</span>
+                  </button>
+                ) : (
+                  <button key={n} className="table-tile" aria-pressed={tableNo === n} onClick={() => setTableNo(n)}>
+                    <span className="t-no">T{n}</span>
+                    <span className="t-meta">Free</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <div className="panel panel-main">
-          <div className="bar-open-grid" style={{ maxWidth: 640 }}>
+          <div className="bar-open-grid" style={{ maxWidth: 640, gridTemplateColumns: "1fr auto" }}>
             <div>
               <label htmlFor="b-who">Open a tab for</label>
               <input id="b-who" value={who} onChange={(e) => setWho(e.target.value)} placeholder="Member or guest name" />
             </div>
-            <div>
-              <label htmlFor="b-table">Table</label>
-              <input id="b-table" value={tableNo} onChange={(e) => setTableNo(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="No." />
-            </div>
             <button className="btn btn-ink" disabled={!who.trim() || busy} onClick={openNew}>Open tab</button>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <label>Table</label>
+            <div className="seg" role="group" aria-label="Table">
+              <button aria-pressed={tableNo === null} onClick={() => setTableNo(null)}>None</button>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <button key={n} aria-pressed={tableNo === n} disabled={open.some((t) => t.tableNo === n)} onClick={() => setTableNo(n)}>T{n}</button>
+              ))}
+            </div>
           </div>
 
           {open.length > 0 && (

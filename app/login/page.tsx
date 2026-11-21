@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { api, ApiClientError } from "@/lib/api";
 
-// Sign-in: email and password, or Google for club accounts.
-// Members never sign in, they book by name. The demo buttons sign in
-// as each role's demo account in one tap.
+// Staff sign-in: email and password, or Google for club accounts.
+// Members have their own sign-in (linked under the card). The demo
+// buttons sign in as each role's demo account in one tap.
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -86,6 +86,9 @@ export default function Login() {
           <p className="demo-creds">owner@champions.club · champions — the rest use demo1234</p>
         </div>
       </div>
+      <p className="member-link">
+        A club member? <a href="/member/login">Member sign in</a>
+      </p>
     </main>
   );
 }

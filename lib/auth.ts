@@ -6,8 +6,9 @@ import { forbidden, unauthorized } from "./errors";
 import type { StaffDTO } from "./types";
 
 // Staff sign-in for the web today, the same token works as a Bearer token
-// for a future mobile app. Members have no login by product decision;
-// the front desk works under a staff account, under their own account.
+// for a future mobile app. Members have their own separate portal login
+// below (cc_member cookie, kind:"member" tokens); the two never mix —
+// a member token is rejected here and a staff token opens no portal page.
 const COOKIE = "cc_session";
 const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET ?? "dev-only-secret-change-me",
@@ -32,6 +33,7 @@ async function signToken(staff: StaffDTO): Promise<string> {
 export async function verifyToken(token: string): Promise<StaffDTO | null> {
   try {
     const { payload } = await jwtVerify(token, secret);
+    if (payload.kind === "member") return null; // portal tokens are not staff tokens
     const staff = await db.staff.findUnique({ where: { id: Number(payload.sub) } });
     return staff ? toStaffDTO(staff) : null;
   } catch {
@@ -96,6 +98,79 @@ export async function currentStaff(): Promise<StaffDTO | null> {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
   return token ? verifyToken(token) : null;
+}
+
+// ---------- Member portal session ----------
+// Members sign in with the email the front desk put on their record;
+// the first password is their phone number. The session lives in its
+// own cookie and every token carries kind:"member".
+const MEMBER_COOKIE = "cc_member";
+
+export type MemberSession = { id: number; name: string; email: string };
+
+async function signMemberToken(m: MemberSession): Promise<string> {
+  return new SignJWT({ kind: "member", name: m.name })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(String(m.id))
+    .setIssuedAt()
+    .setExpirationTime("12h")
+    .sign(secret);
+}
+
+export async function verifyMemberToken(token: string): Promise<MemberSession | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    if (payload.kind !== "member") return null;
+    const member = await db.member.findUnique({ where: { id: Number(payload.sub) } });
+    return member?.email ? { id: member.id, name: member.name, email: member.email } : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function memberLogin(email: string, password: string): Promise<{ member: MemberSession; token: string }> {
+  const member = await db.member.findUnique({ where: { email: email.toLowerCase() } });
+  if (!member?.passwordHash || !(await bcrypt.compare(password, member.passwordHash)))
+    throw unauthorized("Email or password does not match");
+  const session: MemberSession = { id: member.id, name: member.name, email: member.email! };
+  return { member: session, token: await signMemberToken(session) };
+}
+
+export async function setMemberCookie(token: string) {
+  const jar = await cookies();
+  jar.set(MEMBER_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 12 * 60 * 60,
+  });
+}
+
+export async function clearMemberCookie() {
+  const jar = await cookies();
+  jar.delete(MEMBER_COOKIE);
+}
+
+export async function requireMember(req: Request): Promise<MemberSession> {
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer /, "");
+  if (bearer) {
+    const member = await verifyMemberToken(bearer);
+    if (member) return member;
+  }
+  const jar = await cookies();
+  const token = jar.get(MEMBER_COOKIE)?.value;
+  if (token) {
+    const member = await verifyMemberToken(token);
+    if (member) return member;
+  }
+  throw unauthorized();
+}
+
+export async function currentMember(): Promise<MemberSession | null> {
+  const jar = await cookies();
+  const token = jar.get(MEMBER_COOKIE)?.value;
+  return token ? verifyMemberToken(token) : null;
 }
 
 export const GOOGLE_REDIRECT_URI = "https://the-champions-club.vercel.app/api/v1/auth/google/callback";

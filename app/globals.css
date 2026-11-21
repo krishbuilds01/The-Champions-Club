@@ -322,6 +322,8 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
 .demo-box p { font-size: 14px; color: var(--ink-2); }
 .demo-box p strong { color: var(--pine); }
 .demo-creds { font-size: 12.5px !important; }
+.member-link { margin-top: 14px; text-align: center; font-size: 13.5px; color: var(--muted); }
+.member-link a { color: var(--pine); font-weight: 600; }
 
 /* google sign-in on the login page */
 .btn-google { width: 100%; background: var(--surface); border: 1px solid var(--line); color: var(--pine); gap: 10px; text-transform: none; letter-spacing: 0.01em; font-size: 14px; font-weight: 600; }
@@ -329,3 +331,12 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
 .g-mark { display: grid; place-items: center; width: 20px; height: 20px; flex: none; }
 .or-row { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--ink-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; }
 .or-row::before, .or-row::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* Bar tables: one tile per table, occupied tiles carry the tab. */
+.tables-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.table-tile { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; cursor: pointer; font: inherit; color: inherit; }
+.table-tile .t-no { font-family: var(--font-display), sans-serif; font-weight: 700; font-size: 20px; line-height: 1; }
+.table-tile .t-meta { color: var(--muted); font-size: 13px; }
+.table-tile.occupied { border-color: var(--pine); background: rgba(22, 48, 33, 0.05); }
+.table-tile[aria-pressed="true"] { outline: 2px solid var(--volt-dark); outline-offset: 1px; }
+@media (max-width: 860px) { .tables-grid { grid-template-columns: 1fr 1fr; } }

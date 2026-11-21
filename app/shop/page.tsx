@@ -18,6 +18,8 @@ export default function Shop() {
   const [phone, setPhone] = useState("");
   const [staffOrders, setStaffOrders] = useState<import("@/lib/types").OrderDTO[] | null>(null);
   const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
+  const [fulfilment, setFulfilment] = useState<"PICKUP" | "DELIVERY">("PICKUP");
+  const [address, setAddress] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -52,11 +54,13 @@ export default function Shop() {
     setMsg(null);
     try {
       const items = gear.filter((p) => (cart[p.id] ?? 0) > 0).map((p) => ({ productId: p.id, qty: cart[p.id] }));
-      const r = await api.createOrder({ items, name: name.trim(), phone: phone.trim(), payMethod });
+      const r = await api.createOrder({ items, name: name.trim(), phone: phone.trim(), payMethod, fulfilment, address: fulfilment === "DELIVERY" ? address.trim() : undefined });
       setCart({});
       setMsg({
         ok: true,
-        text: `Order placed, ${inr(r.total)}${r.discount ? ` (member discount ${inr(r.discount)} applied)` : ""}. We will keep it at the front desk for pickup.`,
+        text: fulfilment === "DELIVERY"
+          ? `Order placed, ${inr(r.total)}${r.discount ? ` (member discount ${inr(r.discount)} applied)` : ""}. We will deliver it to your address.`
+          : `Order placed, ${inr(r.total)}${r.discount ? ` (member discount ${inr(r.discount)} applied)` : ""}. We will keep it at the front desk for pickup.`,
       });
       void products.reload();
     } catch (e) {
@@ -119,9 +123,22 @@ export default function Shop() {
               ) : null}
             </div>
             <div>
-              <label htmlFor="s-phone">Phone (for pickup)</label>
+              <label htmlFor="s-phone">Phone (for {fulfilment === "DELIVERY" ? "delivery" : "pickup"})</label>
               <input id="s-phone" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="So the desk can call you" />
             </div>
+            <div>
+              <label>Pickup or delivery</label>
+              <div className="seg" role="group" aria-label="Pickup or delivery">
+                <button aria-pressed={fulfilment === "PICKUP"} onClick={() => setFulfilment("PICKUP")}>Pickup</button>
+                <button aria-pressed={fulfilment === "DELIVERY"} onClick={() => setFulfilment("DELIVERY")}>Delivery</button>
+              </div>
+            </div>
+            {fulfilment === "DELIVERY" && (
+              <div>
+                <label htmlFor="s-address">Delivery address</label>
+                <input id="s-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Flat, street, landmark" />
+              </div>
+            )}
             <div>
               <label>Paying by</label>
               <div className="seg" role="group" aria-label="Payment method">
@@ -137,13 +154,13 @@ export default function Shop() {
 
           {staffOrders && staffOrders.length > 0 && (
             <section className="block">
-              <div className="sec-head"><h2>Today&apos;s pickup orders (staff)</h2></div>
+              <div className="sec-head"><h2>Today&apos;s orders (staff)</h2></div>
               <div className="rows">
                 {staffOrders.map((o) => (
                   <div className="row-item" key={o.id}>
                     <div className="row-main">
-                      <p className="row-name">{o.name} <span className="muted" style={{ fontWeight: 400 }}>{o.phone}</span></p>
-                      <p className="muted">{o.items.map((i) => `${i.qty} × ${i.name}`).join(", ")}</p>
+                      <p className="row-name">{o.name} <span className="muted" style={{ fontWeight: 400 }}>{o.phone}</span>{o.fulfilment === "DELIVERY" && <span className="tag" style={{ marginLeft: 8 }}>Delivery</span>}</p>
+                      <p className="muted">{o.items.map((i) => `${i.qty} × ${i.name}`).join(", ")}{o.fulfilment === "DELIVERY" && o.address ? ` · ${o.address}` : ""}</p>
                     </div>
                     <span className="num">{inr(o.total)} · {o.payMethod}</span>
                   </div>
@@ -164,12 +181,13 @@ export default function Shop() {
                 </>
               )}
             </p>
-            <button className="btn btn-ink" disabled={!subtotal || !name.trim() || phone.replace(/\D/g, "").length < 10 || busy} onClick={order}>
+            <button className="btn btn-ink" disabled={!subtotal || !name.trim() || phone.replace(/\D/g, "").length < 10 || (fulfilment === "DELIVERY" && address.trim().length < 10) || busy} onClick={order}>
               {busy ? "Placing order..."
                 : !subtotal ? "Add something first"
                 : !name.trim() ? "Enter your name"
                 : phone.replace(/\D/g, "").length < 10 ? "Enter 10-digit phone"
-                : `Order for pickup, ${inr(total)}`}
+                : fulfilment === "DELIVERY" && address.trim().length < 10 ? "Add the delivery address"
+                : `Order for ${fulfilment === "DELIVERY" ? "delivery" : "pickup"}, ${inr(total)}`}
             </button>
           </div>
         </>

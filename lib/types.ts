@@ -28,6 +28,7 @@ export type MemberDTO = {
   id: number;
   name: string;
   phone: string;
+  email: string | null;
   plan: string;
   planCode: string;
   state: MemberState;
@@ -91,8 +92,23 @@ export type OrderDTO = {
   discount: number;
   total: number;
   payMethod: "CASH" | "CARD" | "UPI";
+  fulfilment: "PICKUP" | "DELIVERY";
+  address: string | null;
   createdAt: string;
   items: { productId: number; name: string; qty: number; price: number }[];
+};
+
+export type MemberSessionDTO = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+export type MemberHomeDTO = {
+  member: MemberDTO;
+  bookings: BookingDTO[];
+  orders: OrderDTO[];
+  tabs: TabDTO[];
 };
 
 export type StaffDTO = {
