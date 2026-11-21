@@ -121,6 +121,45 @@ export async function createMember(
   return toMemberDTO(row);
 }
 
+// Renew a plan: the new term starts at the later of today and the
+// current expiry, so renewing early never loses days. The renewal is
+// recorded in MembershipRenewal in the same transaction as the new
+// expiry, so the paper trail and the member record cannot disagree.
+export async function renewMember(
+  id: number,
+  payMethod: "CASH" | "CARD" | "UPI" | "ONLINE" = "CASH",
+): Promise<MemberDTO> {
+  const member = await db.member.findUnique({ where: { id }, include: { plan: true } });
+  if (!member) throw notFound("No such member");
+  const today = todayISO();
+  const currentExp = member.expiresOn.toISOString().slice(0, 10);
+  const from = currentExp > today ? currentExp : today;
+  const to = addDaysISO(from, member.plan.termDays);
+  // The plan has no membership fee field, so the renewal is charged at
+  // the plan's tennis court rate. If the club sets a real fee, this is
+  // the one place to change.
+  const amount = member.plan.tennisPrice;
+  const updated = await db.$transaction(async (tx) => {
+    const row = await tx.member.update({
+      where: { id },
+      data: { expiresOn: new Date(`${to}T00:00:00.000Z`) },
+      include: { plan: true },
+    });
+    await tx.membershipRenewal.create({
+      data: {
+        memberId: id,
+        planId: member.planId,
+        amount,
+        payMethod,
+        renewedFrom: new Date(`${from}T00:00:00.000Z`),
+        renewedTo: new Date(`${to}T00:00:00.000Z`),
+      },
+    });
+    return row;
+  });
+  return toMemberDTO(updated);
+}
+
 export async function getMember(id: number): Promise<MemberDTO> {
   const row = await db.member.findUnique({ where: { id }, include: { plan: true } });
   if (!row) throw notFound("No such member");

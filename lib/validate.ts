@@ -51,6 +51,10 @@ export const memberInput = z.object({
     .optional(),
 });
 
+export const renewInput = z.object({
+  payMethod: z.enum(["CASH", "CARD", "UPI", "ONLINE"]).optional().default("CASH"),
+});
+
 export const itemsInput = z
   .array(z.object({ productId: z.number().int().positive(), qty: z.number().int().min(1).max(99) }))
   .min(1, "Nothing in the order yet");
