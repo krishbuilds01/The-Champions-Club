@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { db } from "../db";
 import { todayISO } from "../format";
 import { badRequest, conflict, notFound } from "../errors";
@@ -11,6 +12,47 @@ const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 export async function listStaff(): Promise<StaffRosterDTO[]> {
   const rows = await db.staff.findMany({ orderBy: { name: "asc" } });
   return rows.map((s) => ({ id: s.id, name: s.name, role: s.role }));
+}
+
+export async function createStaff(input: {
+  name: string;
+  email: string;
+  password: string;
+  role: StaffRosterDTO["role"];
+}): Promise<StaffRosterDTO> {
+  const email = input.email.trim().toLowerCase();
+  // Email is the sign-in identity (unique in the schema), so a second
+  // account with the same email is a conflict, not a 500.
+  const existing = await db.staff.findUnique({ where: { email } });
+  if (existing) throw conflict("A staff account with that email already exists");
+  // Same hashing as member passwords (bcrypt, cost 10); login compares
+  // with bcrypt.compare, so nothing new is invented here.
+  const passwordHash = await bcrypt.hash(input.password, 10);
+  const row = await db.staff.create({
+    data: { name: input.name.trim(), email, passwordHash, role: input.role },
+  });
+  return { id: row.id, name: row.name, role: row.role };
+}
+
+export async function removeStaff(id: number): Promise<{ ok: true }> {
+  const row = await db.staff.findUnique({ where: { id } });
+  if (!row) throw notFound("No such staff member");
+  // The club must always keep at least one owner who can sign in.
+  if (row.role === "OWNER") {
+    const owners = await db.staff.count({ where: { role: "OWNER" } });
+    if (owners <= 1) throw conflict("The club needs at least one owner account");
+  }
+  // A person with history cannot just vanish: their shifts, leave and
+  // pay records would point at nobody.
+  const [shifts, leaves, payroll] = await Promise.all([
+    db.shift.count({ where: { staffId: id } }),
+    db.leave.count({ where: { staffId: id } }),
+    db.payroll.count({ where: { staffId: id } }),
+  ]);
+  if (shifts > 0 || leaves > 0 || payroll > 0)
+    throw conflict(`${row.name} still has rota, leave or payroll history — clear those first`);
+  await db.staff.delete({ where: { id } });
+  return { ok: true };
 }
 
 export async function listShifts(fromISO: string, toISO: string): Promise<ShiftDTO[]> {
