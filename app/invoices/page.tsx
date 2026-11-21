@@ -8,7 +8,7 @@ import { inr } from "@/lib/format";
 
 export default function Invoices() {
   const invoices = useApi(() => api.invoices());
-  const [form, setForm] = useState({ billedTo: "", detail: "", amount: "" });
+  const [form, setForm] = useState({ billedTo: "", detail: "", amount: "", taxRate: "" });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -25,8 +25,11 @@ export default function Invoices() {
     setBusy(true);
     setMsg(null);
     try {
-      await api.createInvoice({ billedTo: form.billedTo.trim(), detail: form.detail.trim(), amount });
-      setForm({ billedTo: "", detail: "", amount: "" });
+      const taxRate = form.taxRate === "" ? undefined : Number(form.taxRate);
+    if (taxRate !== undefined && (!Number.isFinite(taxRate) || taxRate < 0 || taxRate > 100))
+      return setMsg({ ok: false, text: "Tax rate must be between 0 and 100%." });
+    await api.createInvoice({ billedTo: form.billedTo.trim(), detail: form.detail.trim(), amount, taxRate });
+      setForm({ billedTo: "", detail: "", amount: "", taxRate: "" });
       setMsg({ ok: true, text: "Invoice raised." });
       void invoices.reload();
     } catch (e) {
@@ -106,6 +109,8 @@ export default function Invoices() {
                 <div>
                   <label htmlFor="inv-amt">Amount ₹</label>
                   <input id="inv-amt" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/\D/g, "") })} inputMode="numeric" />
+                  <label htmlFor="inv-tax">Tax rate % (optional)</label>
+                  <input id="inv-tax" value={form.taxRate} onChange={(e) => setForm({ ...form, taxRate: e.target.value.replace(/[^0-9.]/g, "") })} inputMode="decimal" placeholder="e.g. 18" />
                 </div>
               </div>
               <div style={{ marginTop: 14 }}>
