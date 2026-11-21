@@ -65,6 +65,7 @@ export const api = {
   expiringMembers: () => call<ExpiringDTO[]>("/members/expiring"),
   createMember: (input: { name: string; phone?: string; email?: string; planCode: string; dateOfBirth?: string }) =>
     post<MemberDTO>("/members", input),
+  renewMember: (id: number) => post<MemberDTO>(`/members/${id}/renew`, {}),
   createOrder: (input: {
     items: { productId: number; qty: number }[];
     name: string;

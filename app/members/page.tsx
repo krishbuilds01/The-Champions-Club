@@ -4,6 +4,7 @@ import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { Loading, ErrorBox, Empty } from "@/components/States";
 import { todayISO } from "@/lib/format";
+import type { MemberDTO } from "@/lib/types";
 
 const stateLabel = { active: "Active", expiring: "Expiring soon", expired: "Expired" } as const;
 
@@ -13,6 +14,7 @@ export default function Members() {
   const [form, setForm] = useState({ name: "", phone: "", email: "", dob: "", planCode: "silver" });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [renewBusy, setRenewBusy] = useState<number | null>(null);
   const members = useApi(() => api.members(), []);
   const plans = useApi(() => api.plans());
   const ql = q.trim().toLowerCase();
@@ -37,9 +39,8 @@ export default function Members() {
     if (form.email.trim() && !form.email.includes("@"))
       return setMsg({ ok: false, text: "That email does not look right. Check it and try again." });
     if (form.planCode === "junior") {
-      // Junior is under-18 only. The date of birth is checked here; the
-      // member API does not store it yet (another agent owns that), so
-      // the check is enforced at the desk, not in the record.
+      // Junior is under-18 only. The date of birth is checked here and
+      // enforced again on the server, which stores it.
       if (!form.dob) return setMsg({ ok: false, text: "Junior is for under-18s — add a date of birth so the age can be checked." });
       const [by, bm, bd] = form.dob.split("-").map(Number);
       const now = new Date();
@@ -59,6 +60,22 @@ export default function Members() {
       setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Adding failed. Try again." });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function renew(m: MemberDTO) {
+    const base = m.expiresOn > todayISO() ? "the current end date" : "today";
+    if (!window.confirm(`Renew ${m.name}'s ${m.plan} plan for another term? The new term runs from ${base}, so no days are lost.`)) return;
+    setRenewBusy(m.id);
+    setMsg(null);
+    try {
+      const updated = await api.renewMember(m.id);
+      setMsg({ ok: true, text: `${updated.name} renewed — ${updated.plan} now runs until ${updated.expiresOn}.` });
+      void members.reload();
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Renewal failed. Try again." });
+    } finally {
+      setRenewBusy(null);
     }
   }
 
@@ -100,7 +117,7 @@ export default function Members() {
       ) : (
         <div className="ledger-wrap">
           <table className="ledger" style={{ marginTop: 12 }}>
-            <thead><tr><th>Name</th><th>Plan</th><th className="hide-m">Phone</th><th className="hide-m">Plan ends</th><th>Status</th></tr></thead>
+            <thead><tr><th>Name</th><th>Plan</th><th className="hide-m">Phone</th><th className="hide-m">Plan ends</th><th>Status</th><th>Renew</th></tr></thead>
             <tbody>
               {list.map((m) => (
                 <tr key={m.id} className={m.state === "expired" ? "row-off" : ""}>
@@ -109,6 +126,7 @@ export default function Members() {
                   <td className="num hide-m">{m.phone}</td>
                   <td className="num hide-m">{m.expiresOn}</td>
                   <td><span className={`status ${m.state}`}>{stateLabel[m.state]}</span></td>
+                  <td><button className="btn btn-quiet" disabled={renewBusy !== null} onClick={() => renew(m)}>{renewBusy === m.id ? "Renewing..." : "Renew"}</button></td>
                 </tr>
               ))}
             </tbody>
