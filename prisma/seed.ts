@@ -4,7 +4,9 @@ import bcrypt from "bcryptjs";
 
 // The demo-day reset. This WIPES the club tables and loads the exact
 // dataset the demo script runs on, with every date relative to today
-// (IST): baseline dashboard Courts ₹4,200 · Shop ₹0 · Bar ₹0, Tennis 1
+// (IST): baseline dashboard Courts ₹4,200 · Shop ₹0 · Bar ₹0 today, plus
+// a light history over the past 30 days so the week and month views show
+// real, different numbers, Tennis 1
 // free at 18:00, Priya Nair already at her 2-booking limit, Ananya Iyer
 // expired, Gym Towel low, Water Bottle out, and Aarav Mehta's ₹400 tab
 // open on Table 3 (not revenue until settled). Re-run it on the morning
@@ -123,6 +125,76 @@ async function main() {
       planCode: "gold",
       subtotal: 400,
       total: 400,
+      items: {
+        create: [
+          { productId: barId("Protein Shake").id, qty: 1, price: 250 },
+          { productId: barId("Masala Fries").id, qty: 1, price: 150 },
+        ],
+      },
+    },
+  });
+
+  // History: past bookings, orders and settled tabs across the last
+  // 30 days, so the dashboard's week and month views are not just
+  // today repeated. None of it lands today, so the demo baseline
+  // (Courts ₹4,200 · Shop ₹0 · Bar ₹0) is untouched.
+  const past = (daysAgo: number) => new Date(plus(today, -daysAgo).getTime() + 12 * 60 * 60 * 1000);
+  const bookingOn = (daysAgo: number, court: string, start: number, who: string, price: number) => ({
+    courtId: courtId(court),
+    memberId: memberId(who),
+    who,
+    date: plus(today, -daysAgo),
+    start,
+    type: "REGULAR" as const,
+    price,
+  });
+  await db.booking.createMany({
+    data: [
+      bookingOn(1, "Tennis 1", 420, "Priya Nair", 300),
+      bookingOn(1, "Cricket 1", 1020, "Walk-in", 800),
+      bookingOn(3, "Tennis 2", 1080, "Rohan Shah", 400),
+      bookingOn(3, "Tennis 1", 480, "Walk-in", 500),
+      bookingOn(6, "Cricket 1", 960, "Aarav Mehta", 500),
+      bookingOn(12, "Tennis 1", 1020, "Kabir Singh", 250),
+      bookingOn(12, "Tennis 2", 420, "Priya Nair", 300),
+      bookingOn(20, "Cricket 1", 1080, "Walk-in", 800),
+      bookingOn(20, "Tennis 2", 1140, "Rohan Shah", 400),
+    ],
+  });
+  const gear = await db.product.findMany({ where: { category: "GEAR" } });
+  const gearId = (name: string) => gear.find((p) => p.name === name)!;
+  await db.order.create({
+    data: {
+      name: "Dev Malhotra", phone: "9812000011", subtotal: 700, discount: 0, total: 700, payMethod: "CASH", createdAt: past(1),
+      items: { create: [{ productId: gearId("Tennis Balls (can of 3)").id, qty: 2, price: 350 }] },
+    },
+  });
+  await db.order.create({
+    data: {
+      memberId: memberId("Priya Nair"), name: "Priya Nair", phone: "9811000002", subtotal: 800, discount: 120, total: 680, payMethod: "UPI", createdAt: past(4),
+      items: { create: [{ productId: gearId("Club T-Shirt").id, qty: 1, price: 800 }] },
+    },
+  });
+  await db.order.create({
+    data: {
+      name: "Walk-in", phone: "", subtotal: 3000, discount: 0, total: 3000, payMethod: "CARD", createdAt: past(15),
+      items: { create: [{ productId: gearId("Court Shoes").id, qty: 1, price: 3000 }] },
+    },
+  });
+  await db.tab.create({
+    data: {
+      who: "Walk-in guest", status: "SETTLED", planCode: "walkin", subtotal: 400, total: 400, payMethod: "CASH", settledAt: past(2),
+      items: {
+        create: [
+          { productId: barId("Cold Coffee").id, qty: 1, price: 180 },
+          { productId: barId("Club Sandwich").id, qty: 1, price: 220 },
+        ],
+      },
+    },
+  });
+  await db.tab.create({
+    data: {
+      memberId: memberId("Rohan Shah"), who: "Rohan Shah", status: "SETTLED", planCode: "silver", discountPct: 10, subtotal: 400, total: 360, payMethod: "UPI", settledAt: past(9),
       items: {
         create: [
           { productId: barId("Protein Shake").id, qty: 1, price: 250 },
