@@ -1,4 +1,5 @@
 import { db } from "../db";
+import { badRequest } from "../errors";
 import type { CourtDTO, PlanDTO, ProductDTO } from "../types";
 
 // The club's standing data: plans, courts, products. Read by every page
@@ -33,4 +34,49 @@ export async function listProducts(category?: "GEAR" | "BAR"): Promise<ProductDT
     lowAt: p.lowAt,
     category: p.category,
   }));
+}
+
+export async function adjustProductStock(productId: number, delta: number): Promise<ProductDTO> {
+  const product = await db.product.findUnique({ where: { id: productId } });
+  if (!product) throw badRequest("Product not found");
+  if (product.stock === null) throw badRequest("This product category does not track stock");
+  const newStock = Math.max(0, product.stock + delta);
+  const updated = await db.product.update({
+    where: { id: productId },
+    data: { stock: newStock },
+  });
+  return {
+    id: updated.id,
+    name: updated.name,
+    price: updated.price,
+    stock: updated.stock,
+    lowAt: updated.lowAt,
+    category: updated.category,
+  };
+}
+
+export async function createProduct(input: {
+  name: string;
+  price: number;
+  stock?: number;
+  lowAt?: number;
+  category: "GEAR" | "BAR";
+}): Promise<ProductDTO> {
+  const created = await db.product.create({
+    data: {
+      name: input.name,
+      price: input.price,
+      stock: input.category === "GEAR" ? (input.stock ?? 0) : null,
+      lowAt: input.lowAt ?? 5,
+      category: input.category,
+    },
+  });
+  return {
+    id: created.id,
+    name: created.name,
+    price: created.price,
+    stock: created.stock,
+    lowAt: created.lowAt,
+    category: created.category,
+  };
 }

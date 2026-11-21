@@ -13,6 +13,7 @@ const publicLinks = [
 ];
 const staffLinks = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/inventory", label: "Inventory" },
   { href: "/bookings", label: "Bookings" },
   { href: "/members", label: "Members" },
 ];

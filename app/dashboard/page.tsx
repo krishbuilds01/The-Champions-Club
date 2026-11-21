@@ -59,8 +59,9 @@ export default function Dashboard() {
           )}
 
           {d!.lowStock.length > 0 && (
-            <div className="notice warn" role="status">
-              Running low in the shop: {d!.lowStock.map((p) => `${p.name} (${p.stock} left)`).join(", ")}.
+            <div className="notice warn" role="status" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>Running low in the shop: {d!.lowStock.map((p) => `${p.name} (${p.stock} left)`).join(", ")}.</span>
+              <Link className="text-link" href="/inventory">Manage inventory &rarr;</Link>
             </div>
           )}
 

@@ -68,6 +68,15 @@ export const api = {
     memberName?: string;
     payMethod: "CASH" | "CARD" | "UPI";
   }) => post<{ id: number; subtotal: number; discount: number; total: number }>("/orders", input),
+  adjustStock: (input: { productId: number; delta: number }) =>
+    post<ProductDTO>("/inventory/adjust", input),
+  createProduct: (input: {
+    name: string;
+    price: number;
+    stock?: number;
+    lowAt?: number;
+    category: "GEAR" | "BAR";
+  }) => post<ProductDTO>("/products", input),
   settleTab: (input: {
     items: { productId: number; qty: number }[];
     planCode: string;

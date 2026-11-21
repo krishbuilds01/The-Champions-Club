@@ -59,3 +59,16 @@ export const loginInput = z.object({
 export const pinInput = z.object({
   pin: z.string().regex(/^\d{4}$/, "PIN is 4 digits"),
 });
+
+export const adjustStockInput = z.object({
+  productId: z.number().int().positive(),
+  delta: z.number().int(),
+});
+
+export const productCreateInput = z.object({
+  name: z.string().trim().min(1, "Product name is required").max(80),
+  price: z.number().int().positive("Price must be greater than zero"),
+  stock: z.number().int().min(0).optional().default(0),
+  lowAt: z.number().int().min(0).optional().default(5),
+  category: z.enum(["GEAR", "BAR"]),
+});
