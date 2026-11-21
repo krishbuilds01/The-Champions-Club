@@ -13,7 +13,7 @@ function getSecret(): Uint8Array {
   if (!s) throw new Error("AUTH_SECRET is not set");
   return new TextEncoder().encode(s);
 }
-const STAFF_PAGES = ["/dashboard", "/bookings", "/members", "/bar", "/enquiries", "/invoices", "/expenses", "/payroll", "/shifts"];
+const STAFF_PAGES = ["/dashboard", "/bookings", "/members", "/bar", "/enquiries", "/invoices", "/expenses", "/payroll", "/shifts", "/staff", "/orders"];
 
 async function kindOf(token: string | undefined): Promise<string | null> {
   if (!token) return null;
@@ -50,4 +50,4 @@ export async function middleware(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-export const config = { matcher: ["/dashboard/:path*", "/bookings/:path*", "/members/:path*", "/bar/:path*", "/enquiries/:path*", "/invoices/:path*", "/expenses/:path*", "/payroll/:path*", "/shifts/:path*", "/member", "/member/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/bookings/:path*", "/members/:path*", "/bar/:path*", "/enquiries/:path*", "/invoices/:path*", "/expenses/:path*", "/payroll/:path*", "/shifts/:path*", "/staff/:path*", "/orders/:path*", "/member", "/member/:path*"] };
