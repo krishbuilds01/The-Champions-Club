@@ -2,6 +2,7 @@ import { z } from "zod";
 import { badRequest } from "./errors";
 import { isISODate } from "./format";
 import { isISODate } from "./format";
+import { isISODate } from "./format";
 
 // Every API input is parsed here, in one place. Handlers never read raw
 // request bodies.
@@ -91,6 +92,18 @@ export const payrollInput = z.object({
   salary: z.number().int().positive("Salary is missing").max(100000000),
   leaveDays: z.number().int().min(0).max(31).optional().default(0),
   tax: z.number().int().min(0).max(100000000).optional().default(0),
+});
+
+export const leaveInput = z.object({
+  staffId: z.number().int().positive(),
+  from: z.string().refine((d) => isISODate(d), "That start date is not a real date"),
+  to: z.string().refine((d) => isISODate(d), "That end date is not a real date"),
+  type: z.enum(["ANNUAL", "SICK", "UNPAID", "OTHER"]).optional().default("ANNUAL"),
+  reason: z.string().trim().max(200).optional().default(""),
+});
+
+export const leaveDecisionInput = z.object({
+  status: z.enum(["APPROVED", "REJECTED"]),
 });
 
 export const shiftInput = z.object({

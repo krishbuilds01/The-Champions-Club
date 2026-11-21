@@ -110,6 +110,21 @@ export type PayrollDTO = {
 
 export type StaffRosterDTO = { id: number; name: string; role: string };
 
+export type LeaveDTO = {
+  id: number;
+  staffId: number;
+  staffName: string;
+  role: string;
+  fromDate: string;
+  toDate: string;
+  type: "ANNUAL" | "SICK" | "UNPAID" | "OTHER";
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  decidedBy: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+};
+
 export type ShiftDTO = {
   id: number;
   staffId: number;
