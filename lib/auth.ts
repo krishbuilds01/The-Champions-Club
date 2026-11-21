@@ -10,9 +10,14 @@ import type { StaffDTO } from "./types";
 // below (cc_member cookie, kind:"member" tokens); the two never mix —
 // a member token is rejected here and a staff token opens no portal page.
 const COOKIE = "cc_session";
-const secret = new TextEncoder().encode(
-  process.env.AUTH_SECRET ?? "dev-only-secret-change-me",
-);
+// No fallback: a missing AUTH_SECRET must fail loudly instead of
+// signing every token with a secret anyone can guess. Read lazily so
+// a missing secret breaks sign-in attempts, not the build.
+function getSecret(): Uint8Array {
+  const s = process.env.AUTH_SECRET;
+  if (!s) throw new Error("AUTH_SECRET is not set — staff and member sign-in cannot work without it");
+  return new TextEncoder().encode(s);
+}
 
 export const toStaffDTO = (s: { id: number; name: string; email: string; role: StaffDTO["role"] }): StaffDTO => ({
   id: s.id,
@@ -27,12 +32,12 @@ async function signToken(staff: StaffDTO): Promise<string> {
     .setSubject(String(staff.id))
     .setIssuedAt()
     .setExpirationTime("12h")
-    .sign(secret);
+    .sign(getSecret());
 }
 
 export async function verifyToken(token: string): Promise<StaffDTO | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     if (payload.kind === "member") return null; // portal tokens are not staff tokens
     const staff = await db.staff.findUnique({ where: { id: Number(payload.sub) } });
     return staff ? toStaffDTO(staff) : null;
@@ -115,12 +120,12 @@ async function signMemberToken(m: MemberSession): Promise<string> {
     .setSubject(String(m.id))
     .setIssuedAt()
     .setExpirationTime("12h")
-    .sign(secret);
+    .sign(getSecret());
 }
 
 export async function verifyMemberToken(token: string): Promise<MemberSession | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     if (payload.kind !== "member") return null;
     const member = await db.member.findUnique({ where: { id: Number(payload.sub) } });
     return member?.email ? { id: member.id, name: member.name, email: member.email } : null;
