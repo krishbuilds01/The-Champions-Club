@@ -34,7 +34,7 @@
   --bad: #c0362c;
   --bad-bg: #fdf0ef;
   --ok-bg: #eef7d6;
-  --shadow: 0 1px 2px rgba(22, 48, 33, 0.05), 0 10px 30px rgba(22, 48, 33, 0.07);
+  --shadow: 0 1px 2px rgba(22, 48, 33, 0.04);
   --shadow-lift: 0 2px 4px rgba(22, 48, 33, 0.06), 0 18px 44px rgba(22, 48, 33, 0.13);
 }
 @layer base {
@@ -221,3 +221,16 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
   html { scroll-behavior: auto; }
   * { transition: none !important; animation: none !important; }
 }
+
+/* page heads wear the landing's eyebrow: a volt rule and a tracked label */
+.page-eyebrow { display: flex; align-items: center; gap: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 10px; }
+.page-eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--volt-dark); flex: none; }
+
+/* the club badge on light ground (the landing header's mark, in green) */
+.badge-mark { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--pine); color: var(--pine); font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 700; font-size: 18px; margin-bottom: 16px; background: var(--volt); }
+
+/* demo entry on the sign-in page */
+.demo-box { margin-top: 28px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; display: grid; gap: 12px; }
+.demo-box p { font-size: 14px; color: var(--ink-2); }
+.demo-box p strong { color: var(--pine); }
+.demo-creds { font-size: 12.5px !important; }

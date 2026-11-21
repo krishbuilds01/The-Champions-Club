@@ -6,7 +6,12 @@ import { unauthorized } from "./errors";
 import type { StaffDTO } from "./types";
 
 // Staff sign-in for the web today, the same token works as a Bearer token
+<<<<<<< HEAD
 // for a future mobile app.
+=======
+// for a future mobile app. Members have no login by product decision;
+// the front desk works under a staff account, under their own account.
+>>>>>>> 9119cdb312dbba6b7a24f12c1717680edfdaba51
 const COOKIE = "cc_session";
 const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET ?? "dev-only-secret-change-me",
@@ -46,6 +51,7 @@ export async function login(email: string, password: string): Promise<{ staff: S
   return { staff: dto, token: await signToken(dto) };
 }
 
+<<<<<<< HEAD
 export async function loginWithPin(pin: string): Promise<{ staff: StaffDTO; token: string }> {
   const withPins = await db.staff.findMany({ where: { pinHash: { not: null } } });
   for (const s of withPins) {
@@ -56,6 +62,8 @@ export async function loginWithPin(pin: string): Promise<{ staff: StaffDTO; toke
   }
   throw unauthorized("That PIN does not match");
 }
+=======
+>>>>>>> 9119cdb312dbba6b7a24f12c1717680edfdaba51
 
 export async function setSessionCookie(token: string) {
   const jar = await cookies();

@@ -48,6 +48,7 @@ export default function Bar() {
   return (
     <main className="wrap page">
       <div className="page-head">
+        <p className="page-eyebrow">Clubhouse</p>
         <h1 className="page-title">Bar &amp; Café</h1>
         <p className="sub">Open a tab, add as they order, settle before they leave. Pick the member&apos;s plan and the discount applies itself. Staff view.</p>
       </div>

@@ -57,6 +57,7 @@ export default function Courts() {
   return (
     <main className="wrap page">
       <div className="page-head">
+        <p className="page-eyebrow">Play</p>
         <h1 className="page-title">Courts</h1>
         <p className="sub">Pick a court and a day. Crossed-out slots are taken, and a booking covers the full hour.</p>
       </div>

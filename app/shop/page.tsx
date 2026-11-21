@@ -58,6 +58,7 @@ export default function Shop() {
   return (
     <main className="wrap page">
       <div className="page-head">
+        <p className="page-eyebrow">Pro shop</p>
         <h1 className="page-title">Club shop</h1>
         <p className="sub">The same shelf as the counter. What is listed here is what is actually in stock.</p>
       </div>

@@ -63,6 +63,7 @@ export default function Trial() {
   return (
     <main className="wrap page" style={{ maxWidth: 680 }}>
       <div className="page-head">
+        <p className="page-eyebrow">Play</p>
         <h1 className="page-title">Book a free trial</h1>
         <p className="sub">One hour on court, no card and no commitment.</p>
       </div>

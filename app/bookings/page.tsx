@@ -27,6 +27,7 @@ export default function Bookings() {
   return (
     <main className="wrap page">
       <div className="page-head">
+        <p className="page-eyebrow">Front desk</p>
         <h1 className="page-title">Bookings</h1>
         <p className="sub">Every booking on the books from today on. Cancelling frees the slot at once. Staff view.</p>
       </div>

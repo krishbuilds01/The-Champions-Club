@@ -84,7 +84,6 @@ export const api = {
   }) => post<{ id: number; subtotal: number; discount: number; total: number }>("/tabs", input),
   dashboard: (date?: string) => call<DashboardDTO>(`/dashboard${date ? `?date=${date}` : ""}`),
   login: (email: string, password: string) => post<{ staff: StaffDTO }>("/auth/login", { email, password }),
-  loginPin: (pin: string) => post<{ staff: StaffDTO }>("/auth/pin", { pin }),
   logout: () => post<{ ok: boolean }>("/auth/logout"),
   me: () => call<{ staff: StaffDTO }>("/auth/me"),
 };

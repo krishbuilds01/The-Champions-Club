@@ -37,6 +37,7 @@ export default function Members() {
   return (
     <main className="wrap page">
       <div className="page-head">
+        <p className="page-eyebrow">Front desk</p>
         <h1 className="page-title">Members</h1>
         <p className="sub">Find any member in seconds, and see their plan and where it stands. Staff view.</p>
       </div>
