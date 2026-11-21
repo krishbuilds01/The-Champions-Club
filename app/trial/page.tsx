@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
-import { allStarts, fmtTime, todayISO } from "@/lib/format";
+import { allStarts, fmtTime, istMinutesNow, todayISO } from "@/lib/format";
 import { Loading, ErrorBox } from "@/components/States";
 
 const starts = allStarts();
@@ -15,10 +15,32 @@ export default function Trial() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
+  const [q, setQ] = useState({ interest: "Membership", message: "" });
+  const [qMsg, setQMsg] = useState("");
+  const [qBusy, setQBusy] = useState(false);
+
+  async function ask() {
+    if (!f.name.trim()) return setQMsg("Add your name so we know who is asking.");
+    if (f.phone.replace(/\D/g, "").length < 10 && !f.phone.includes("@")) return setQMsg("Add a phone number or email so we can reply.");
+    setQBusy(true);
+    setQMsg("");
+    try {
+      await api.createEnquiry({ name: f.name.trim(), contact: f.phone.trim(), interest: q.interest, message: q.message.trim() });
+      setQ({ interest: "Membership", message: "" });
+      setQMsg("Sent. The front desk will get back to you.");
+    } catch (e) {
+      setQMsg(e instanceof ApiClientError ? e.message : "Sending failed. Try again.");
+    } finally {
+      setQBusy(false);
+    }
+  }
+
   const courts = useApi(() => api.courts());
   const avail = useApi(() => api.availability(f.courtId, f.date), [f.courtId, f.date]);
   const taken = avail.data?.taken ?? [];
-  const freeSlots = starts.filter((t) => !taken.some((b) => Math.abs(b - t) < 60));
+  const freeSlots = starts.filter(
+    (t) => !taken.some((b) => Math.abs(b - t) < 60) && (f.date !== today || t + 60 > istMinutesNow()),
+  );
   const court = courts.data?.find((c) => c.id === f.courtId);
 
   useEffect(() => {
@@ -104,6 +126,28 @@ export default function Trial() {
             </div>
           </div>
           {freeSlots.length === 0 && <div className="notice err">No free slots on {court?.name} that day. Try another court or day.</div>}
+          <div className="panel" style={{ marginTop: 8 }}>
+            <h3 style={{ marginBottom: 6 }}>Ask the club anything</h3>
+            <p className="muted" style={{ marginBottom: 14 }}>Membership, courts, coaching, the shop. Your question lands on the front desk&apos;s list, with the name and phone above.</p>
+            <div className="form-grid">
+              <div>
+                <label htmlFor="q-interest">I am asking about</label>
+                <select id="q-interest" value={q.interest} onChange={(e) => setQ({ ...q, interest: e.target.value })}>
+                  {["Membership", "Free trial", "Courts", "Shop", "Other"].map((i) => (
+                    <option key={i} value={i}>{i}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="q-message">Your question</label>
+                <input id="q-message" value={q.message} onChange={(e) => setQ({ ...q, message: e.target.value })} placeholder="What would you like to know?" />
+              </div>
+              {qMsg && <div className="notice" role="status">{qMsg}</div>}
+              <div>
+                <button className="btn btn-quiet" disabled={qBusy} onClick={ask}>{qBusy ? "Sending..." : "Send to the front desk"}</button>
+              </div>
+            </div>
+          </div>
           {err && <div className="notice err" role="alert">{err}</div>}
           <div>
             <button className="btn btn-ink" disabled={freeSlots.length === 0 || busy} onClick={submit}>

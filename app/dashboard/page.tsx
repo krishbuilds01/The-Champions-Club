@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { fmtTime, inr, todayISO } from "@/lib/format";
@@ -9,17 +10,25 @@ import NumberTicker from "@/components/NumberTicker";
 const typeLabel = { REGULAR: "Regular", FRIDAY_SOCIAL: "Social Play", TRIAL: "Trial" } as const;
 const methodLabel = { CASH: "Cash", CARD: "Card", UPI: "UPI" } as const;
 
+const periods = [
+  { code: "today", label: "Today" },
+  { code: "week", label: "Last 7 days" },
+  { code: "month", label: "Last 30 days" },
+] as const;
+
 export default function Dashboard() {
   const today = todayISO();
   const dash = useApi(() => api.dashboard(today), [today]);
   const d = dash.data;
+  const [period, setPeriod] = useState<(typeof periods)[number]["code"]>("today");
 
-  const figures = d
+  const split = d?.periods[period];
+  const figures = split
     ? [
-        { label: "Courts today", value: d.totals.courts },
-        { label: "Shop today", value: d.totals.shop },
-        { label: "Bar today", value: d.totals.bar },
-        { label: "Total today", value: d.totals.total, total: true },
+        { label: "Courts", value: split.courts },
+        { label: "Shop", value: split.shop },
+        { label: "Bar", value: split.bar },
+        { label: "Total", value: split.total, total: true },
       ]
     : [];
 
@@ -37,6 +46,12 @@ export default function Dashboard() {
         <ErrorBox message={dash.error} onRetry={dash.reload} />
       ) : (
         <>
+          <div className="seg" role="group" aria-label="Period" style={{ marginBottom: 18 }}>
+            {periods.map((p) => (
+              <button key={p.code} aria-pressed={period === p.code} onClick={() => setPeriod(p.code)}>{p.label}</button>
+            ))}
+          </div>
+
           <div className="figures">
             {figures.map((f) => (
               <div className={`figure${f.total ? " total" : ""}`} key={f.label}>
@@ -46,7 +61,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {d!.byMethod.length > 0 && (
+          {period === "today" && d!.byMethod.length > 0 && (
             <p className="muted" style={{ marginTop: 14 }}>
               Taken today by{" "}
               {d!.byMethod.map((m, i) => (

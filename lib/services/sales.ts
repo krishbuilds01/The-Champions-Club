@@ -1,5 +1,7 @@
 import { db } from "../db";
-import { badRequest, conflict } from "../errors";
+import { badRequest, conflict, notFound } from "../errors";
+import { istDayStart, todayISO } from "../format";
+import type { OrderDTO, TabDTO } from "../types";
 import { memberState, findMemberByName } from "./members";
 
 // Shop orders and bar tabs. One stock list serves the counter and the
@@ -20,13 +22,15 @@ async function priceItems(items: Item[], category: "GEAR" | "BAR") {
   });
 }
 
+// ---------- Shop: pickup orders ----------
+
 export async function createOrder(input: {
   items: Item[];
-  memberName: string;
+  name: string;
+  phone: string;
   payMethod: "CASH" | "CARD" | "UPI";
 }) {
-  const member = input.memberName ? await findMemberByName(input.memberName) : null;
-  if (input.memberName && !member) throw badRequest(`No member named ${input.memberName}`);
+  const member = await findMemberByName(input.name);
   const active = member && memberState(member.expiresOn) === "active";
   const discountPct = active ? member.plan.shopDiscount : 0;
 
@@ -45,6 +49,8 @@ export async function createOrder(input: {
     const order = await tx.order.create({
       data: {
         memberId: member?.id,
+        name: input.name,
+        phone: input.phone,
         subtotal,
         discount,
         total: subtotal - discount,
@@ -53,37 +59,154 @@ export async function createOrder(input: {
           create: lines.map((l) => ({ productId: l.product.id, qty: l.qty, price: l.product.price })),
         },
       },
-      include: { items: true },
+      include: { items: { include: { product: true } } },
     });
     for (const l of lines) {
       if (l.product.stock !== null)
         await tx.product.update({ where: { id: l.product.id }, data: { stock: { decrement: l.qty } } });
     }
-    return { id: order.id, subtotal, discount, total: order.total, payMethod: order.payMethod };
+    return toOrderDTO(order);
   });
 }
 
-export async function settleTab(input: {
-  items: Item[];
-  planCode: string;
+type OrderRow = {
+  id: number;
+  name: string;
+  phone: string;
+  subtotal: number;
+  discount: number;
+  total: number;
   payMethod: "CASH" | "CARD" | "UPI";
-}) {
-  const plan =
-    input.planCode === "walkin" ? null : await db.plan.findUnique({ where: { code: input.planCode } });
-  if (input.planCode !== "walkin" && !plan) throw badRequest("Pick a plan that exists");
-  const discountPct = plan?.barDiscount ?? 0;
-  const lines = await priceItems(input.items, "BAR");
-  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
-  const discount = Math.round((subtotal * discountPct) / 100);
+  createdAt: Date;
+  items: { productId: number; qty: number; price: number; product: { name: string } }[];
+};
+
+const toOrderDTO = (o: OrderRow): OrderDTO => ({
+  id: o.id,
+  name: o.name,
+  phone: o.phone,
+  subtotal: o.subtotal,
+  discount: o.discount,
+  total: o.total,
+  payMethod: o.payMethod,
+  createdAt: o.createdAt.toISOString(),
+  items: o.items.map((i) => ({ productId: i.productId, name: i.product.name, qty: i.qty, price: i.price })),
+});
+
+export async function listOrders(): Promise<OrderDTO[]> {
+  const rows = await db.order.findMany({
+    where: { createdAt: { gte: istDayStart(todayISO()) } },
+    include: { items: { include: { product: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(toOrderDTO);
+}
+
+// ---------- Bar: tabs with a real open → settle life ----------
+
+type TabRow = {
+  id: number;
+  who: string;
+  tableNo: number | null;
+  status: "OPEN" | "SETTLED";
+  planCode: string;
+  discountPct: number;
+  subtotal: number;
+  total: number;
+  payMethod: "CASH" | "CARD" | "UPI" | null;
+  items: { productId: number; qty: number; price: number; product: { name: string } }[];
+};
+
+const tabInclude = { items: { include: { product: true } } } as const;
+
+const toTabDTO = (t: TabRow): TabDTO => ({
+  id: t.id,
+  who: t.who,
+  tableNo: t.tableNo,
+  status: t.status,
+  planCode: t.planCode,
+  discountPct: t.discountPct,
+  subtotal: t.subtotal,
+  total: t.total,
+  payMethod: t.payMethod,
+  items: t.items.map((i) => ({ productId: i.productId, name: i.product.name, qty: i.qty, price: i.price })),
+});
+
+async function getTabRow(id: number): Promise<TabRow> {
+  const tab = await db.tab.findUnique({ where: { id }, include: tabInclude });
+  if (!tab) throw notFound("No such tab");
+  return tab as TabRow;
+}
+
+export async function listTabs(): Promise<TabDTO[]> {
+  const rows = await db.tab.findMany({
+    where: {
+      OR: [{ status: "OPEN" }, { settledAt: { gte: istDayStart(todayISO()) } }],
+    },
+    include: tabInclude,
+    orderBy: { openedAt: "asc" },
+  });
+  return rows.map((t) => toTabDTO(t as TabRow));
+}
+
+export async function openTab(input: { who: string; tableNo?: number }): Promise<TabDTO> {
+  const member = await findMemberByName(input.who);
   const tab = await db.tab.create({
     data: {
-      planCode: input.planCode,
-      discountPct,
-      subtotal,
-      total: subtotal - discount,
-      payMethod: input.payMethod,
-      items: { create: lines.map((l) => ({ productId: l.product.id, qty: l.qty, price: l.product.price })) },
+      who: member?.name ?? input.who,
+      memberId: member?.id,
+      tableNo: input.tableNo,
+      status: "OPEN",
+      planCode: member?.plan.code ?? "walkin",
     },
+    include: tabInclude,
   });
-  return { id: tab.id, subtotal, discount, total: tab.total, payMethod: tab.payMethod };
+  return toTabDTO(tab as TabRow);
+}
+
+export async function addTabItems(id: number, items: Item[]): Promise<TabDTO> {
+  const tab = await getTabRow(id);
+  if (tab.status !== "OPEN") throw conflict("That tab is already settled");
+  const lines = await priceItems(items, "BAR");
+  await db.$transaction(async (tx) => {
+    for (const l of lines) {
+      await tx.tabItem.upsert({
+        where: { tabId_productId: { tabId: id, productId: l.product.id } },
+        create: { tabId: id, productId: l.product.id, qty: l.qty, price: l.product.price },
+        update: { qty: { increment: l.qty } },
+      });
+    }
+    const now = await tx.tabItem.findMany({ where: { tabId: id } });
+    const subtotal = now.reduce((s, i) => s + i.price * i.qty, 0);
+    await tx.tab.update({ where: { id }, data: { subtotal, total: subtotal } });
+  });
+  return toTabDTO(await getTabRow(id));
+}
+
+export async function settleTab(id: number, payMethod: "CASH" | "CARD" | "UPI"): Promise<TabDTO> {
+  const tab = await db.tab.findUnique({
+    where: { id },
+    include: { member: { include: { plan: true } } },
+  });
+  if (!tab) throw notFound("No such tab");
+  if (tab.status !== "OPEN") throw conflict("That tab is already settled");
+  // The discount comes from the member's plan on record, applied here at
+  // settle time. Nobody types a discount, and nobody can inflate one.
+  const member = tab.member;
+  const discountPct =
+    member && memberState(member.expiresOn) === "active" ? member.plan.barDiscount : 0;
+  const discount = Math.round((tab.subtotal * discountPct) / 100);
+  const updated = await db.tab.update({
+    where: { id },
+    data: {
+      status: "SETTLED",
+      planCode: discountPct && member ? member.plan.code : "walkin",
+      discountPct,
+      total: tab.subtotal - discount,
+      payMethod,
+      settledAt: new Date(),
+    },
+    include: tabInclude,
+  });
+  return toTabDTO(updated as TabRow);
 }

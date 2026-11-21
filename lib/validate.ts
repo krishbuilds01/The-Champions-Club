@@ -41,15 +41,35 @@ export const itemsInput = z
 
 export const orderInput = z.object({
   items: itemsInput,
-  memberName: z.string().trim().max(80).optional().default(""),
+  name: z.string().trim().min(1, "Your name is missing").max(80),
+  phone: phone,
   payMethod: z.enum(["CASH", "CARD", "UPI"]),
 });
 
-export const tabInput = z.object({
-  items: itemsInput,
-  planCode: z.string().min(1), // a plan code, or "walkin"
+export const tabOpenInput = z.object({
+  who: z.string().trim().min(1, "The tab needs a name").max(80),
+  tableNo: z.number().int().min(1).max(99).optional(),
+});
+
+export const tabItemsInput = z.object({ items: itemsInput });
+
+export const tabSettleInput = z.object({
   payMethod: z.enum(["CASH", "CARD", "UPI"]),
 });
+
+export const enquiryInput = z.object({
+  name: z.string().trim().min(2, "Your name is missing").max(80),
+  contact: z.string().trim().min(3, "Add a phone number or email").max(80),
+  interest: z.enum(["Membership", "Free trial", "Courts", "Shop", "Other"]),
+  message: z.string().trim().max(500).optional().default(""),
+});
+
+export const enquiryPatchInput = z.object({
+  status: z.enum(["NEW", "CONTACTED", "QUOTED", "CONVERTED", "LOST"]).optional(),
+  note: z.string().trim().max(500).optional(),
+});
+
+export const convertInput = z.object({ planCode: z.string().min(1) });
 
 export const loginInput = z.object({
   email: z.string().trim().email("That email does not look right"),

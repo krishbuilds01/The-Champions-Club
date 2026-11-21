@@ -24,14 +24,15 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
 }
 
 const facilities = [
-  { number: "01", title: "Courts", description: "Six championship padel and tennis courts, thoughtfully designed for every level of play.", icon: "court" as IconName, meta: "6 premium courts" },
-  { number: "02", title: "Clubhouse", description: "A relaxed bar and kitchen serving all-day plates, considered drinks, and post-match rituals.", icon: "cup" as IconName, meta: "Open until late" },
-  { number: "03", title: "Pro shop", description: "Technical essentials, fresh club apparel, and expert advice—all right where you play.", icon: "bag" as IconName, meta: "Curated for players" },
+  { number: "01", title: "Courts", description: "Six championship padel and tennis courts, thoughtfully designed for every level of play.", icon: "court" as IconName, meta: "6 premium courts", href: "/courts" },
+  { number: "02", title: "Clubhouse", description: "A relaxed bar and kitchen serving all-day plates, considered drinks, and post-match rituals.", icon: "cup" as IconName, meta: "Open until late", href: "/bar" },
+  { number: "03", title: "Pro shop", description: "Technical essentials, fresh club apparel, and expert advice—all right where you play.", icon: "bag" as IconName, meta: "Curated for players", href: "/shop" },
 ];
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState("");
+  const [email, setEmail] = useState("");
 
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -113,12 +114,12 @@ export default function Home() {
             </div>
             <div className="grid border-y border-white/15 md:grid-cols-3 md:divide-x md:divide-white/15">
               {facilities.map((facility) => (
-                <article key={facility.title} className="group border-b border-white/15 py-8 last:border-b-0 md:border-b-0 md:px-7 md:first:pl-0 md:last:pr-0 lg:px-10">
+                <Link href={facility.href} key={facility.title} className="group block border-b border-white/15 py-8 last:border-b-0 md:border-b-0 md:px-7 md:first:pl-0 md:last:pr-0 lg:px-10">
                   <div className="mb-16 flex items-start justify-between"><span className="text-[10px] font-bold tracking-[.2em] text-white/35">{facility.number}</span><div className="grid h-12 w-12 place-items-center rounded-full border border-white/20 text-[#dfff45] transition group-hover:border-[#dfff45] group-hover:bg-[#dfff45] group-hover:text-[#173021]"><Icon name={facility.icon} /></div></div>
                   <h3 className="font-display text-4xl font-bold uppercase">{facility.title}</h3>
                   <p className="mt-4 min-h-[72px] text-sm leading-6 text-white/55">{facility.description}</p>
                   <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-5"><span className="text-[10px] font-bold uppercase tracking-wider text-[#dfff45]">{facility.meta}</span><Icon name="arrow" className="h-4 w-4 text-white/30 transition group-hover:translate-x-1 group-hover:text-white" /></div>
-                </article>
+                </Link>
               ))}
             </div>
           </div>
@@ -134,7 +135,7 @@ export default function Home() {
               <p className="eyebrow">The clubhouse</p>
               <h2 className="mt-5 font-display text-6xl font-bold uppercase leading-[.88] tracking-tight sm:text-7xl">Good games.<br />Better company.</h2>
               <p className="mt-7 max-w-md text-sm leading-7 text-[#405143]">Our bar and kitchen is made for the full day—from the first flat white to the last round. Seasonal plates, cold drinks, and the best seat in the house for watching the action.</p>
-              <button onClick={() => setNotice("The clubhouse menu is coming soon")} className="mt-9 flex items-center gap-5 rounded-full bg-[#173021] px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#173021]">Meet at the bar <Icon name="arrow" className="h-4 w-4" /></button>
+              <Link href="/bar" className="mt-9 flex w-fit items-center gap-5 rounded-full bg-[#173021] px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#173021]">Meet at the bar <Icon name="arrow" className="h-4 w-4" /></Link>
             </div>
           </div>
         </section>
@@ -145,8 +146,17 @@ export default function Home() {
             <h2 className="mx-auto mt-5 max-w-4xl font-display text-6xl font-bold uppercase leading-[.88] tracking-tight sm:text-8xl">Make Champions<br /><span className="text-[#7c887e]">your home court.</span></h2>
             <p className="mx-auto mt-7 max-w-xl text-sm leading-7 text-[#68746b]">Priority booking, member rates, club events, and a community that always has room for one more.</p>
             <div className="mx-auto mt-10 flex max-w-md rounded-full border border-[#173021]/15 bg-white p-1.5 shadow-sm">
-              <input aria-label="Email address" placeholder="Your email address" className="min-w-0 flex-1 bg-transparent px-5 text-sm outline-none placeholder:text-[#849087]" />
-              <button onClick={() => setNotice("Thanks — we'll be in touch shortly")} className="rounded-full bg-[#173021] px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-[#294d36]">Request info</button>
+              <input aria-label="Email address" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent px-5 text-sm outline-none placeholder:text-[#849087]" />
+              <button onClick={async () => {
+                const em = email.trim();
+                if (!em.includes("@")) { setNotice("Add an email address first"); return; }
+                try {
+                  const res = await fetch("/api/v1/enquiries", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Website visitor", contact: em, interest: "Membership", message: "Membership info requested from the website" }) });
+                  if (!res.ok) throw new Error();
+                  setEmail("");
+                  setNotice("Thanks — we'll be in touch shortly");
+                } catch { setNotice("Could not send that — try again"); }
+              }} className="rounded-full bg-[#173021] px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-[#294d36]">Request info</button>
             </div>
           </div>
         </section>

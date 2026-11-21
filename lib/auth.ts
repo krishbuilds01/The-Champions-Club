@@ -2,22 +2,18 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
-import { unauthorized } from "./errors";
+import { forbidden, unauthorized } from "./errors";
 import type { StaffDTO } from "./types";
 
 // Staff sign-in for the web today, the same token works as a Bearer token
-<<<<<<< HEAD
-// for a future mobile app.
-=======
 // for a future mobile app. Members have no login by product decision;
 // the front desk works under a staff account, under their own account.
->>>>>>> 9119cdb312dbba6b7a24f12c1717680edfdaba51
 const COOKIE = "cc_session";
 const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET ?? "dev-only-secret-change-me",
 );
 
-export const toStaffDTO = (s: { id: number; name: string; email: string; role: "OWNER" | "STAFF" }): StaffDTO => ({
+export const toStaffDTO = (s: { id: number; name: string; email: string; role: StaffDTO["role"] }): StaffDTO => ({
   id: s.id,
   name: s.name,
   email: s.email,
@@ -43,7 +39,7 @@ export async function verifyToken(token: string): Promise<StaffDTO | null> {
   }
 }
 
-export async function tokenForStaff(s: { id: number; name: string; email: string; role: "OWNER" | "STAFF" }): Promise<string> {
+export async function tokenForStaff(s: { id: number; name: string; email: string; role: StaffDTO["role"] }): Promise<string> {
   return signToken(toStaffDTO(s));
 }
 
@@ -54,20 +50,6 @@ export async function login(email: string, password: string): Promise<{ staff: S
   const dto = toStaffDTO(staff);
   return { staff: dto, token: await signToken(dto) };
 }
-
-<<<<<<< HEAD
-export async function loginWithPin(pin: string): Promise<{ staff: StaffDTO; token: string }> {
-  const withPins = await db.staff.findMany({ where: { pinHash: { not: null } } });
-  for (const s of withPins) {
-    if (s.pinHash && (await bcrypt.compare(pin, s.pinHash))) {
-      const dto = toStaffDTO(s);
-      return { staff: dto, token: await signToken(dto) };
-    }
-  }
-  throw unauthorized("That PIN does not match");
-}
-=======
->>>>>>> 9119cdb312dbba6b7a24f12c1717680edfdaba51
 
 export async function setSessionCookie(token: string) {
   const jar = await cookies();
@@ -100,6 +82,14 @@ export async function requireStaff(req: Request): Promise<StaffDTO> {
     if (staff) return staff;
   }
   throw unauthorized();
+}
+
+// Staff sign-in plus a role check, for routes only some roles may use:
+// the dashboard is the owner's, the bar till is bar staff's, and so on.
+export async function requireRole(req: Request, ...roles: StaffDTO["role"][]): Promise<StaffDTO> {
+  const staff = await requireStaff(req);
+  if (!roles.includes(staff.role)) throw forbidden("Your role cannot do this");
+  return staff;
 }
 
 export async function currentStaff(): Promise<StaffDTO | null> {

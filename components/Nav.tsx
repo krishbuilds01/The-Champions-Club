@@ -11,12 +11,18 @@ const publicLinks = [
   { href: "/shop", label: "Shop" },
   { href: "/bar", label: "Bar & Café" },
 ];
-const staffLinks = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/inventory", label: "Inventory" },
-  { href: "/bookings", label: "Bookings" },
-  { href: "/members", label: "Members" },
-];
+
+const staffLinksFor = (role: StaffDTO["role"]) => {
+  const desk = [
+    { href: "/inventory", label: "Inventory" },
+    { href: "/bookings", label: "Bookings" },
+    { href: "/members", label: "Members" },
+    { href: "/enquiries", label: "Enquiries" },
+  ];
+  if (role === "OWNER") return [{ href: "/dashboard", label: "Dashboard" }, ...desk];
+  if (role === "FRONT_DESK" || role === "STAFF") return desk;
+  return [];
+};
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
@@ -45,7 +51,7 @@ export default function Nav() {
     window.location.href = "/";
   }
 
-  const links = staff ? [...publicLinks, ...staffLinks] : publicLinks;
+  const links = staff ? [...publicLinks, ...staffLinksFor(staff.role)] : publicLinks;
 
   return (
     <header className="nav">

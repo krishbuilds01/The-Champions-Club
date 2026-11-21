@@ -9,7 +9,8 @@ export async function listPlans(): Promise<PlanDTO[]> {
   return rows.map((p) => ({
     code: p.code,
     name: p.name,
-    courtPrice: p.courtPrice,
+    tennisPrice: p.tennisPrice,
+    cricketPrice: p.cricketPrice,
     shopDiscount: p.shopDiscount,
     barDiscount: p.barDiscount,
     termDays: p.termDays,

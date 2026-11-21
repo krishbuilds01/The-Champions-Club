@@ -1,12 +1,18 @@
 import { handle, body } from "@/lib/http";
-import { requireStaff } from "@/lib/auth";
-import { parse, tabInput } from "@/lib/validate";
-import { settleTab } from "@/lib/services/sales";
+import { requireRole } from "@/lib/auth";
+import { parse, tabOpenInput } from "@/lib/validate";
+import { listTabs, openTab } from "@/lib/services/sales";
 
-// Settling a bar tab is till work, so it needs a staff session.
+// The bar till is bar work: only the owner and bar staff run tabs.
+export const GET = (req: Request) =>
+  handle(async () => {
+    await requireRole(req, "OWNER", "BAR");
+    return listTabs();
+  });
+
 export const POST = (req: Request) =>
   handle(async () => {
-    await requireStaff(req);
-    const input = parse(tabInput, await body(req));
-    return settleTab(input);
+    await requireRole(req, "OWNER", "BAR");
+    const input = parse(tabOpenInput, await body(req));
+    return openTab(input);
   }, 201);

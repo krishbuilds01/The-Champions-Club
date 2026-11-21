@@ -12,6 +12,22 @@ datasource db {
 enum Role {
   OWNER
   STAFF
+  FRONT_DESK
+  BAR
+  SHOP
+}
+
+enum TabState {
+  OPEN
+  SETTLED
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  CONVERTED
+  LOST
 }
 
 enum BookingType {
@@ -40,7 +56,8 @@ model Plan {
   id           Int      @id @default(autoincrement())
   code         String   @unique
   name         String
-  courtPrice   Int // rupees per hour on court
+  tennisPrice  Int @default(0) // rupees per hour on a tennis court
+  cricketPrice Int @default(0) // rupees per hour on a cricket court
   shopDiscount Int // percent
   barDiscount  Int // percent
   termDays     Int
@@ -65,6 +82,7 @@ model Member {
   expiresOn DateTime  @db.Date
   bookings  Booking[]
   orders    Order[]
+  tabs      Tab[]
   createdAt DateTime  @default(now())
 
   @@index([name])
@@ -104,6 +122,8 @@ model Order {
   id        Int         @id @default(autoincrement())
   memberId  Int?
   member    Member?     @relation(fields: [memberId], references: [id])
+  name      String      @default("") // buyer name for pickup
+  phone     String      @default("")
   subtotal  Int
   discount  Int         @default(0)
   total     Int
@@ -128,15 +148,36 @@ model OrderItem {
 
 model Tab {
   id          Int       @id @default(autoincrement())
+  memberId    Int?
+  member      Member?   @relation(fields: [memberId], references: [id])
+  who         String    @default("") // name on the tab
+  tableNo     Int?
+  status      TabState  @default(SETTLED)
   planCode    String    @default("walkin") // plan the discount came from, kept as a snapshot
   discountPct Int       @default(0)
-  subtotal    Int
-  total       Int
-  payMethod   PayMethod
-  settledAt   DateTime  @default(now())
+  subtotal    Int       @default(0)
+  total       Int       @default(0)
+  payMethod   PayMethod?
+  openedAt    DateTime  @default(now())
+  settledAt   DateTime?
   items       TabItem[]
 
   @@index([settledAt])
+}
+
+model Enquiry {
+  id        Int           @id @default(autoincrement())
+  name      String
+  contact   String // phone or email, as the visitor gave it
+  interest  String // Membership, Free trial, Courts, Shop, Other
+  message   String        @default("")
+  status    EnquiryStatus @default(NEW)
+  note      String        @default("") // staff follow-up note
+  memberId  Int? // set when the enquiry converts to a member
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
 }
 
 model TabItem {

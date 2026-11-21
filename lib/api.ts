@@ -1,4 +1,4 @@
-import type { BookingDTO, CourtDTO, DashboardDTO, MemberDTO, PlanDTO, ProductDTO, StaffDTO } from "./types";
+import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, MemberDTO, OrderDTO, PlanDTO, ProductDTO, StaffDTO, TabDTO } from "./types";
 
 // The web app's one door to the API. Every page fetches through here, so
 // error handling and the base path live in exactly one place. A mobile
@@ -45,7 +45,8 @@ export const api = {
         plan: string;
         planCode: string;
         state: "active" | "expiring" | "expired";
-        courtPrice: number;
+        tennisPrice: number;
+        cricketPrice: number;
         shopDiscount: number;
         barDiscount: number;
       } | null;
@@ -65,9 +66,11 @@ export const api = {
     post<MemberDTO>("/members", input),
   createOrder: (input: {
     items: { productId: number; qty: number }[];
-    memberName?: string;
+    name: string;
+    phone: string;
     payMethod: "CASH" | "CARD" | "UPI";
-  }) => post<{ id: number; subtotal: number; discount: number; total: number }>("/orders", input),
+  }) => post<OrderDTO>("/orders", input),
+  orders: () => call<OrderDTO[]>("/orders"),
   adjustStock: (input: { productId: number; delta: number }) =>
     post<ProductDTO>("/inventory/adjust", input),
   createProduct: (input: {
@@ -77,11 +80,18 @@ export const api = {
     lowAt?: number;
     category: "GEAR" | "BAR";
   }) => post<ProductDTO>("/products", input),
-  settleTab: (input: {
-    items: { productId: number; qty: number }[];
-    planCode: string;
-    payMethod: "CASH" | "CARD" | "UPI";
-  }) => post<{ id: number; subtotal: number; discount: number; total: number }>("/tabs", input),
+  tabs: () => call<TabDTO[]>("/tabs"),
+  openTab: (input: { who: string; tableNo?: number }) => post<TabDTO>("/tabs", input),
+  addTabItems: (id: number, items: { productId: number; qty: number }[]) =>
+    post<TabDTO>(`/tabs/${id}/items`, { items }),
+  settleTab: (id: number, payMethod: "CASH" | "CARD" | "UPI") =>
+    post<TabDTO>(`/tabs/${id}/settle`, { payMethod }),
+  createEnquiry: (input: { name: string; contact: string; interest: string; message?: string }) =>
+    post<EnquiryDTO>("/enquiries", input),
+  enquiries: () => call<EnquiryDTO[]>("/enquiries"),
+  updateEnquiry: (id: number, patch: { status?: EnquiryDTO["status"]; note?: string }) =>
+    call<EnquiryDTO>(`/enquiries/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+  convertEnquiry: (id: number, planCode: string) => post<EnquiryDTO>(`/enquiries/${id}/convert`, { planCode }),
   dashboard: (date?: string) => call<DashboardDTO>(`/dashboard${date ? `?date=${date}` : ""}`),
   login: (email: string, password: string) => post<{ staff: StaffDTO }>("/auth/login", { email, password }),
   logout: () => post<{ ok: boolean }>("/auth/logout"),

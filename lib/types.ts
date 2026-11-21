@@ -4,7 +4,8 @@
 export type PlanDTO = {
   code: string;
   name: string;
-  courtPrice: number;
+  tennisPrice: number;
+  cricketPrice: number;
   shopDiscount: number;
   barDiscount: number;
   termDays: number;
@@ -46,12 +47,57 @@ export type BookingDTO = {
   state: "BOOKED" | "CANCELLED";
 };
 
+export type MoneySplit = { courts: number; shop: number; bar: number; total: number };
+
 export type DashboardDTO = {
   date: string;
-  totals: { courts: number; shop: number; bar: number; total: number };
+  totals: MoneySplit;
+  periods: { today: MoneySplit; week: MoneySplit; month: MoneySplit };
   byMethod: { method: "CASH" | "CARD" | "UPI"; amount: number }[];
   onCourt: BookingDTO[];
   lowStock: ProductDTO[];
 };
 
-export type StaffDTO = { id: number; name: string; email: string; role: "OWNER" | "STAFF" };
+export type TabDTO = {
+  id: number;
+  who: string;
+  tableNo: number | null;
+  status: "OPEN" | "SETTLED";
+  planCode: string;
+  discountPct: number;
+  subtotal: number;
+  total: number;
+  payMethod: "CASH" | "CARD" | "UPI" | null;
+  items: { productId: number; name: string; qty: number; price: number }[];
+};
+
+export type EnquiryDTO = {
+  id: number;
+  name: string;
+  contact: string;
+  interest: string;
+  message: string;
+  status: "NEW" | "CONTACTED" | "QUOTED" | "CONVERTED" | "LOST";
+  note: string;
+  memberId: number | null;
+  createdAt: string;
+};
+
+export type OrderDTO = {
+  id: number;
+  name: string;
+  phone: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  payMethod: "CASH" | "CARD" | "UPI";
+  createdAt: string;
+  items: { productId: number; name: string; qty: number; price: number }[];
+};
+
+export type StaffDTO = {
+  id: number;
+  name: string;
+  email: string;
+  role: "OWNER" | "STAFF" | "FRONT_DESK" | "BAR" | "SHOP";
+};

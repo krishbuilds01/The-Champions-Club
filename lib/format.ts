@@ -10,11 +10,22 @@ export const fmtTime = (minutes: number) => {
   return `${h12}:${m} ${ap}`;
 };
 
-export const todayISO = () => {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+// The club is in India, so "today" and day boundaries are IST whatever
+// timezone the server happens to run in. India has no daylight saving.
+const IST_MS = 5.5 * 60 * 60 * 1000;
+
+export const todayISO = () => new Date(Date.now() + IST_MS).toISOString().slice(0, 10);
+
+export const istMinutesNow = () => {
+  const d = new Date(Date.now() + IST_MS);
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
 };
+
+// The UTC instant an IST calendar day starts (for timestamp columns).
+export const istDayStart = (dateISO: string) => new Date(`${dateISO}T00:00:00+05:30`);
+
+export const addDaysISO = (dateISO: string, days: number) =>
+  new Date(Date.parse(dateISO) + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 export const isISODate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
 

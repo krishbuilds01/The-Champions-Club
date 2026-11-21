@@ -5,7 +5,7 @@ import { jwtVerify } from "jose";
 // signature and expiry at the edge; API handlers re-check against the
 // database on every call.
 const secret = new TextEncoder().encode(process.env.AUTH_SECRET ?? "dev-only-secret-change-me");
-const STAFF_PAGES = ["/dashboard", "/bookings", "/members", "/bar"];
+const STAFF_PAGES = ["/dashboard", "/bookings", "/members", "/bar", "/enquiries"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -26,4 +26,4 @@ export async function middleware(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-export const config = { matcher: ["/dashboard/:path*", "/bookings/:path*", "/members/:path*", "/bar/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/bookings/:path*", "/members/:path*", "/bar/:path*", "/enquiries/:path*"] };

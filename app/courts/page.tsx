@@ -2,8 +2,10 @@
 import { useEffect, useState } from "react";
 import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
-import { allStarts, fmtTime, inr, todayISO } from "@/lib/format";
+import { allStarts, fmtTime, inr, istMinutesNow, todayISO } from "@/lib/format";
 import { Loading, ErrorBox } from "@/components/States";
+import Link from "next/link";
+import type { StaffDTO } from "@/lib/types";
 
 const starts = allStarts();
 
@@ -25,10 +27,20 @@ export default function Courts() {
 
   const court = courts.data?.find((c) => c.id === courtId);
   const member = lookup.data?.member ?? null;
+  const [staff, setStaff] = useState<StaffDTO | null>(null);
+  const [meKnown, setMeKnown] = useState(false);
+  useEffect(() => {
+    api.me()
+      .then((r) => setStaff(r.staff))
+      .catch(() => setStaff(null))
+      .finally(() => setMeKnown(true));
+  }, []);
+  const canBook = !!staff && (staff.role === "OWNER" || staff.role === "FRONT_DESK" || staff.role === "STAFF");
   // a booking runs a full hour, so it also blocks the starts either side of it
   const taken = avail.data?.taken ?? [];
-  const free = (t: number) => !taken.some((b) => Math.abs(b - t) < 60);
-  const price = slot === null || !court ? null : member ? member.courtPrice : court.walkinPrice;
+  const free = (t: number) =>
+    !taken.some((b) => Math.abs(b - t) < 60) && (date !== today || t + 60 > istMinutesNow());
+  const price = slot === null || !court ? null : member ? (court.sport === "Cricket" ? member.cricketPrice : member.tennisPrice) : court.walkinPrice;
 
   useEffect(() => {
     setSlot(null);
@@ -115,15 +127,23 @@ export default function Courts() {
               <h3>Your details</h3>
               <span className="step-hint">Members: your registered name gets your plan price</span>
             </div>
+            {!meKnown ? null : !canBook ? (
+              <p className="muted" style={{ maxWidth: 520 }}>
+                Bookings are made at the front desk, so this page shows live availability for everyone.
+                Visiting first? <Link className="text-link" href="/trial">Book a free trial</Link>
+                {staff ? "." : <> or <Link className="text-link" href="/login">sign in as staff</Link> to book.</>}
+              </p>
+            ) : (
             <div style={{ maxWidth: 420 }}>
               <label htmlFor="name">Your name</label>
               <input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Members: your registered name" />
             </div>
+            )}
             {member && (
               <p className="muted" style={{ marginTop: 10 }} role="status">
                 {member.state === "expired"
                   ? `${member.name}, ${member.plan} plan, expired. Bookings are paused until it is renewed.`
-                  : `${member.name}, ${member.plan} plan, courts at ${member.courtPrice === 0 ? "no charge" : inr(member.courtPrice) + " an hour"}.`}
+                  : `${member.name}, ${member.plan} plan, this court at ${inr(court?.sport === "Cricket" ? member.cricketPrice : member.tennisPrice)} an hour.`}
               </p>
             )}
 
@@ -142,7 +162,7 @@ export default function Courts() {
                 </>
               )}
             </p>
-              <button className="btn btn-ink" disabled={slot === null || !name.trim() || busy} onClick={book}>
+              <button className="btn btn-ink" disabled={!canBook || slot === null || !name.trim() || busy} onClick={book}>
                 {busy ? "Booking..." : slot === null || !court ? "Pick a slot first" : `Book ${court.name} at ${fmtTime(slot)}`}
               </button>
             </div>

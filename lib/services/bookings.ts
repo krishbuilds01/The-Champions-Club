@@ -1,9 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "../db";
 import { badRequest, conflict, forbidden, notFound } from "../errors";
-import { BOOKING_LEN, LAST_START_MIN, OPEN_MIN, SLOT_STEP, isISODate, todayISO } from "../format";
+import { BOOKING_LEN, LAST_START_MIN, OPEN_MIN, SLOT_STEP, fmtTime, isISODate, istMinutesNow, todayISO } from "../format";
 import type { BookingDTO } from "../types";
 import { findMemberByName, memberState } from "./members";
+import { createEnquiry } from "./enquiries";
 
 // Court booking rules, enforced here on the server so no client, web or
 // mobile, can break them:
@@ -86,6 +87,8 @@ export async function createBooking(input: {
 }): Promise<BookingDTO> {
   if (!isISODate(input.date)) throw badRequest("Date must be YYYY-MM-DD");
   if (input.date < todayISO()) throw badRequest("That date has already passed");
+  if (input.date === todayISO() && input.start + BOOKING_LEN <= istMinutesNow())
+    throw badRequest("That time has already passed today");
   if (input.start < OPEN_MIN || input.start > LAST_START_MIN || input.start % SLOT_STEP !== 0)
     throw badRequest("Start times run on the half hour, 6 AM to 9 PM");
   if (input.type === "TRIAL" && input.phone.replace(/\D/g, "").length < 10)
@@ -98,8 +101,8 @@ export async function createBooking(input: {
   if (member && memberState(member.expiresOn, input.date) === "expired")
     throw forbidden(`${member.name}'s plan has expired. The front desk can renew it in a minute.`);
 
-  const price =
-    input.type === "TRIAL" ? 0 : member ? member.plan.courtPrice : court.walkinPrice;
+  const planPrice = court.sport === "Cricket" ? member?.plan.cricketPrice : member?.plan.tennisPrice;
+  const price = input.type === "TRIAL" ? 0 : member ? planPrice! : court.walkinPrice;
   const day = new Date(`${input.date}T00:00:00.000Z`);
 
   const created = await db.$transaction(async (tx) => {
@@ -141,7 +144,18 @@ export async function createBooking(input: {
     });
   });
 
-  return toBookingDTO(created);
+  const dto = toBookingDTO(created);
+  if (input.type === "TRIAL") {
+    // A trial is also a lead: it lands on the enquiries list so the desk
+    // can follow up. Never let a CRM hiccup fail the booking itself.
+    await createEnquiry({
+      name: dto.who,
+      contact: input.phone,
+      interest: "Free trial",
+      message: `Trial on ${court.name}, ${input.date} at ${fmtTime(input.start)}`,
+    }).catch(() => {});
+  }
+  return dto;
 }
 
 export async function cancelBooking(id: number): Promise<BookingDTO> {
