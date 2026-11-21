@@ -1,4 +1,4 @@
-import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, ExpenseDTO, ExpiringDTO, InvoiceDTO, MemberDTO, MemberHomeDTO, MemberSessionDTO, OrderDTO, PayrollDTO, PlanDTO, ProductDTO, ShiftDTO, StaffDTO, StaffRosterDTO, TabDTO, TaxSummaryDTO } from "./types";
+import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, ExpenseDTO, ExpiringDTO, InvoiceDTO, LeaveDTO, MemberDTO, MemberHomeDTO, MemberSessionDTO, OrderDTO, PayrollDTO, PlanDTO, ProductDTO, ShiftDTO, StaffDTO, StaffRosterDTO, TabDTO, TaxSummaryDTO } from "./types";
 
 // The web app's one door to the API. Every page fetches through here, so
 // error handling and the base path live in exactly one place. A mobile
@@ -89,6 +89,11 @@ export const api = {
   shifts: (from: string, to: string) => call<ShiftDTO[]>(`/shifts?from=${from}&to=${to}`),
   assignShift: (input: { staffId: number; date: string; part: "MORNING" | "EVENING" }) => post<ShiftDTO>("/shifts", input),
   removeShift: (id: number) => call<{ ok: true }>(`/shifts/${id}`, { method: "DELETE" }),
+  leaves: () => call<LeaveDTO[]>("/leave"),
+  requestLeave: (input: { staffId: number; from: string; to: string; type: "ANNUAL" | "SICK" | "UNPAID" | "OTHER"; reason?: string }) =>
+    post<LeaveDTO>("/leave", input),
+  decideLeave: (id: number, status: "APPROVED" | "REJECTED") =>
+    call<LeaveDTO>(`/leave/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }),
   payConfig: () => call<{ enabled: boolean; keyId: string | null }>("/payments/config"),
   confirmPayment: (id: number, proof: { razorpayOrderId: string; paymentId: string; signature: string }) =>
     post<OrderDTO>(`/orders/${id}/pay-confirm`, proof),
