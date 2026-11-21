@@ -43,6 +43,10 @@ export async function verifyToken(token: string): Promise<StaffDTO | null> {
   }
 }
 
+export async function tokenForStaff(s: { id: number; name: string; email: string; role: "OWNER" | "STAFF" }): Promise<string> {
+  return signToken(toStaffDTO(s));
+}
+
 export async function login(email: string, password: string): Promise<{ staff: StaffDTO; token: string }> {
   const staff = await db.staff.findUnique({ where: { email: email.toLowerCase() } });
   if (!staff || !(await bcrypt.compare(password, staff.passwordHash)))

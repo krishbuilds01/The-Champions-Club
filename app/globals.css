@@ -234,3 +234,10 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
 .demo-box p { font-size: 14px; color: var(--ink-2); }
 .demo-box p strong { color: var(--pine); }
 .demo-creds { font-size: 12.5px !important; }
+
+/* google sign-in on the login page */
+.btn-google { width: 100%; background: var(--surface); border: 1px solid var(--line); color: var(--pine); }
+.btn-google:hover { border-color: rgba(22, 48, 33, 0.35); background: var(--surface); }
+.g-mark { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #4285f4; color: #fff; font-weight: 700; font-size: 12px; }
+.or-row { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--ink-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; }
+.or-row::before, .or-row::after { content: ""; flex: 1; height: 1px; background: var(--line); }

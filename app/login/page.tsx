@@ -1,14 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiClientError } from "@/lib/api";
 
-// Staff sign-in: email and password only. Members never sign in,
-// they book by name. The demo button signs in as the club owner.
+// Staff sign-in: email and password, or Google for staff accounts.
+// Members never sign in, they book by name. The demo button signs in
+// as the club owner.
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [googleHref, setGoogleHref] = useState("/api/v1/auth/google");
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("error") === "notstaff") setErr("That Google account is not a staff account.");
+    else if (q.get("error") === "google") setErr("Google sign-in did not work. Try again, or use your password.");
+    const next = q.get("next");
+    if (next) setGoogleHref(`/api/v1/auth/google?next=${encodeURIComponent(next)}`);
+  }, []);
 
   async function go(e: string, p: string) {
     setErr("");
@@ -35,6 +45,11 @@ export default function Login() {
         <h1 className="page-title">Staff sign-in</h1>
         <p className="sub">Dashboard, bookings, members and the bar till live behind this.</p>
       </div>
+
+      <a className="btn btn-google" href={googleHref}>
+        <span className="g-mark">G</span> Continue with Google
+      </a>
+      <div className="or-row"><span>or</span></div>
 
       <div className="form-grid">
         <div>
