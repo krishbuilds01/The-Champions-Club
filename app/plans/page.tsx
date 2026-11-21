@@ -58,7 +58,7 @@ export default function Plans() {
                       <li>{p.termDays} days of membership</li>
                       {p.code === "junior" && <li>For players under 18</li>}
                     </ul>
-                    <Link href="/trial" className="btn btn-primary plan-cta">Book a free trial</Link>
+                    <Link href="/trial" className="btn btn-ink plan-cta">Book a free trial</Link>
                   </article>
                 );
               })}
