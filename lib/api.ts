@@ -75,7 +75,15 @@ export const api = {
     address?: string;
     payOnline?: boolean;
   }) => post<OrderDTO & { razorpayOrderId?: string }>("/orders", input),
-  orders: () => call<OrderDTO[]>("/orders"),
+  orders: (from?: string, to?: string, page?: number) => {
+    const q = new URLSearchParams();
+    if (from) q.set("from", from);
+    if (to) q.set("to", to);
+    if (page) q.set("page", String(page));
+    const s = q.toString();
+    return call<OrderDTO[]>(`/orders${s ? `?${s}` : ""}`);
+  },
+  payOrder: (id: number) => post<OrderDTO>(`/orders/${id}/pay`, {}),
   invoices: () => call<InvoiceDTO[]>("/invoices"),
   createInvoice: (input: { billedTo: string; detail?: string; amount: number; taxRate?: number }) => post<InvoiceDTO>("/invoices", input),
   taxSummary: (from: string, to: string) => call<TaxSummaryDTO>(`/reports/tax?from=${from}&to=${to}`),
