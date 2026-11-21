@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "node:crypto";
+import { getGoogleRedirectUri } from "@/lib/auth";
 
 // Starts Google sign-in for staff. Needs GOOGLE_CLIENT_ID and
 // GOOGLE_CLIENT_SECRET in the environment.
 export async function GET(req: NextRequest) {
-  const id = process.env.GOOGLE_CLIENT_ID;
+  const id = process.env.GOOGLE_CLIENT_ID?.trim();
   if (!id) return NextResponse.redirect(new URL("/login?error=google", req.url));
   const state = crypto.randomBytes(16).toString("hex");
   const jar = await cookies();
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   jar.set("cc_gnext", next.startsWith("/") ? next : "/dashboard", opts);
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", id);
-  url.searchParams.set("redirect_uri", `${req.nextUrl.origin}/api/v1/auth/google/callback`);
+  url.searchParams.set("redirect_uri", getGoogleRedirectUri(req));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("state", state);

@@ -97,3 +97,18 @@ export async function currentStaff(): Promise<StaffDTO | null> {
   const token = jar.get(COOKIE)?.value;
   return token ? verifyToken(token) : null;
 }
+
+export const GOOGLE_REDIRECT_URI = "https://the-champions-club.vercel.app/api/v1/auth/google/callback";
+
+export function getGoogleRedirectUri(req?: { headers: { get: (name: string) => string | null }; nextUrl?: { host?: string; protocol?: string } }): string {
+  if (process.env.GOOGLE_REDIRECT_URI) return process.env.GOOGLE_REDIRECT_URI.trim();
+  if (req) {
+    const host = req.headers.get("x-forwarded-host") || req.nextUrl?.host;
+    if (host && (host.startsWith("localhost") || host.startsWith("127.0.0.1"))) {
+      const proto = req.headers.get("x-forwarded-proto") || (req.nextUrl?.protocol ? req.nextUrl.protocol.replace(":", "") : "http");
+      return `${proto}://${host}/api/v1/auth/google/callback`;
+    }
+  }
+  return GOOGLE_REDIRECT_URI;
+}
+

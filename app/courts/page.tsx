@@ -79,7 +79,7 @@ export default function Courts() {
       ) : courts.error ? (
         <ErrorBox message={courts.error} onRetry={courts.reload} />
       ) : (
-        <div className="panel">
+        <div className="panel panel-main">
           <div className="step">
             <div className="step-head">
               <span className="step-n">1</span>
@@ -113,7 +113,7 @@ export default function Courts() {
             ) : (
               <div className="slots" role="group" aria-label="Start times">
                 {starts.map((t) => (
-                  <button key={t} className="slot num" disabled={!free(t)} aria-pressed={slot === t} onClick={() => setSlot(t)}>
+                  <button key={t} className={`slot num${date === today && t + 60 <= istMinutesNow() ? " past" : ""}`} disabled={!free(t)} aria-pressed={slot === t} onClick={() => setSlot(t)}>
                     {fmtTime(t)}
                   </button>
                 ))}
@@ -140,10 +140,15 @@ export default function Courts() {
             </div>
             )}
             {member && (
-              <p className="muted" style={{ marginTop: 10 }} role="status">
+              <p className={`member-strip${member.state === "expired" ? " warn" : ""}`} role="status">
                 {member.state === "expired"
                   ? `${member.name}, ${member.plan} plan, expired. Bookings are paused until it is renewed.`
                   : `${member.name}, ${member.plan} plan, this court at ${inr(court?.sport === "Cricket" ? member.cricketPrice : member.tennisPrice)} an hour.`}
+              </p>
+            )}
+            {name.trim().length >= 3 && !lookup.loading && !member && (
+              <p className="muted" style={{ marginTop: 8 }} role="status">
+                No member found under that name. Walk-in rate applies.
               </p>
             )}
 
@@ -156,14 +161,14 @@ export default function Courts() {
               ) : (
                 <>
                   {court.name} at <span className="num">{fmtTime(slot)}</span> ·{" "}
-                  <span className="num s-total" style={{ fontSize: 16 }}>
+                  <span className="num s-price">
                     {price === 0 ? "Covered by your plan" : inr(price ?? 0)}
                   </span>
                 </>
               )}
             </p>
               <button className="btn btn-ink" disabled={!canBook || slot === null || !name.trim() || busy} onClick={book}>
-                {busy ? "Booking..." : slot === null || !court ? "Pick a slot first" : `Book ${court.name} at ${fmtTime(slot)}`}
+                {!canBook ? "Front desk only — sign in to book" : busy ? "Booking..." : slot === null || !court ? "Pick a slot first" : `Book ${court.name} at ${fmtTime(slot)}`}
               </button>
             </div>
           </div>

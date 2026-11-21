@@ -39,12 +39,17 @@ export default function Members() {
       <div className="page-head">
         <p className="page-eyebrow">Front desk</p>
         <h1 className="page-title">Members</h1>
-        <p className="sub">Find any member in seconds, and see their plan and where it stands. Staff view.</p>
+        <p className="sub">Find any member in seconds, and see their plan and where it stands.</p>
       </div>
 
-      <div style={{ maxWidth: 420 }}>
-        <label htmlFor="m-search">Search members</label>
-        <input id="m-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name" />
+      <div className="toolbar">
+        <div style={{ width: 420, maxWidth: "100%" }}>
+          <label htmlFor="m-search">Search members</label>
+          <input id="m-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name" />
+        </div>
+        {!members.loading && !members.error && list.length > 0 && (
+          <p className="count-line"><b>{list.length}</b> {list.length === 1 ? "member" : "members"}{q ? " found" : ""} · {list.filter((m) => m.state === "active").length} active</p>
+        )}
       </div>
 
       {members.loading ? (
@@ -58,12 +63,13 @@ export default function Members() {
       ) : (
         <div className="ledger-wrap">
           <table className="ledger" style={{ marginTop: 12 }}>
-            <thead><tr><th>Name</th><th>Plan</th><th className="hide-m">Plan ends</th><th>Status</th></tr></thead>
+            <thead><tr><th>Name</th><th>Plan</th><th className="hide-m">Phone</th><th className="hide-m">Plan ends</th><th>Status</th></tr></thead>
             <tbody>
               {list.map((m) => (
-                <tr key={m.id}>
+                <tr key={m.id} className={m.state === "expired" ? "row-off" : ""}>
                   <td style={{ fontWeight: 500 }}>{m.name}</td>
                   <td>{m.plan}</td>
+                  <td className="num hide-m">{m.phone}</td>
                   <td className="num hide-m">{m.expiresOn}</td>
                   <td><span className={`status ${m.state}`}>{stateLabel[m.state]}</span></td>
                 </tr>
@@ -75,7 +81,7 @@ export default function Members() {
 
       <section className="block">
         <div className="sec-head"><h2>Add a member</h2></div>
-        <div className="panel" style={{ maxWidth: 760 }}>
+        <div className="panel panel-main" style={{ maxWidth: 760 }}>
           <div className="field-row">
             <div>
               <label htmlFor="m-name">Name</label>

@@ -18,6 +18,7 @@ export default function Bookings() {
     setMsg("");
     try {
       await api.cancelBooking(id);
+      setMsg("Booking cancelled. The court slot is now free.");
       void bookings.reload();
     } catch (e) {
       setMsg(e instanceof ApiClientError ? e.message : "Cancelling failed. Try again.");
@@ -29,20 +30,25 @@ export default function Bookings() {
       <div className="page-head">
         <p className="page-eyebrow">Front desk</p>
         <h1 className="page-title">Bookings</h1>
-        <p className="sub">Every booking on the books from today on. Cancelling frees the slot at once. Staff view.</p>
+        <p className="sub">Every booking on the books from today on. Cancelling frees the slot at once.</p>
       </div>
 
-      <div style={{ maxWidth: 260, marginBottom: 8 }}>
-        <label htmlFor="b-date">Show one day</label>
-        <input id="b-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        {date && (
-          <button className="text-link" style={{ marginTop: 6 }} onClick={() => setDate("")}>
-            Show all upcoming days
-          </button>
+      <div className="toolbar">
+        <div style={{ width: 260, maxWidth: "100%" }}>
+          <label htmlFor="b-date">Show one day</label>
+          <input id="b-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          {date && (
+            <button className="text-link" style={{ marginTop: 6 }} onClick={() => setDate("")}>
+              Show all upcoming days
+            </button>
+          )}
+        </div>
+        {!bookings.loading && !bookings.error && (
+          <p className="count-line"><b>{live.length}</b> {live.length === 1 ? "booking" : "bookings"} standing{date ? " that day" : ""}</p>
         )}
       </div>
 
-      {msg && <div className="notice err" role="alert">{msg}</div>}
+      {msg && <div className={`notice ${msg.includes("failed") ? "err" : "ok"}`} role="status">{msg}</div>}
       {bookings.loading ? (
         <Loading />
       ) : bookings.error ? (
@@ -55,7 +61,7 @@ export default function Bookings() {
             <thead><tr><th>Date</th><th>Time</th><th>Court</th><th>Who</th><th className="hide-m">Type</th><th className="hide-m">Price</th><th>Status</th><th /></tr></thead>
             <tbody>
               {rows.map((b) => (
-                <tr key={b.id}>
+                <tr key={b.id} className={b.state === "CANCELLED" ? "row-off" : ""}>
                   <td className="num">{b.date}</td>
                   <td className="num">{fmtTime(b.start)}</td>
                   <td>{b.court}</td>

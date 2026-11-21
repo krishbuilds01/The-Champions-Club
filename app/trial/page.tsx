@@ -22,6 +22,7 @@ export default function Trial() {
   async function ask() {
     if (!f.name.trim()) return setQMsg("Add your name so we know who is asking.");
     if (f.phone.replace(/\D/g, "").length < 10 && !f.phone.includes("@")) return setQMsg("Add a phone number or email so we can reply.");
+    if (!q.message.trim()) return setQMsg("Please write your question first.");
     setQBusy(true);
     setQMsg("");
     try {
@@ -52,7 +53,7 @@ export default function Trial() {
   async function submit() {
     setErr("");
     if (!f.name.trim()) return setErr("Your name is missing.");
-    if (f.phone.replace(/\D/g, "").length < 10) return setErr("Add a phone number the desk can reach you on.");
+    if (f.phone.replace(/\D/g, "").length < 10) return setErr("Add a 10-digit phone number the desk can reach you on.");
     if (!freeSlots.includes(f.startTime)) return setErr("That time was just taken. Pick another slot.");
     setBusy(true);
     try {
@@ -69,15 +70,18 @@ export default function Trial() {
   if (done) {
     return (
       <main className="wrap page" style={{ maxWidth: 680 }}>
-        <h1 className="page-title">You are booked in, {f.name.trim().split(" ")[0]}.</h1>
-        <p className="sub" style={{ maxWidth: 520 }}>
-          Free trial on {court?.name}, {f.date === today ? "today" : f.date} at {fmtTime(f.startTime)}. One hour, rackets and balls on us.
-          If you like it, the front desk can set up your plan the same day.
-        </p>
-        <p style={{ marginTop: 20, display: "flex", gap: 16 }}>
-          <Link className="text-link" href="/courts">See all court times</Link>
-          <Link className="text-link" href="/#plans">Look at membership</Link>
-        </p>
+        <div className="panel panel-main">
+          <p className="page-eyebrow">Free trial</p>
+          <h1 className="page-title">You are booked in, {f.name.trim().split(" ")[0]}.</h1>
+          <p className="sub" style={{ maxWidth: 520 }}>
+            Free trial on {court?.name}, {f.date === today ? "today" : f.date} at {fmtTime(f.startTime)}. One hour, rackets and balls on us.
+            If you like it, the front desk can set up your plan the same day.
+          </p>
+          <p style={{ marginTop: 20, display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <Link className="btn btn-quiet" href="/courts">See all court times</Link>
+            <Link className="text-link" href="/#membership">Look at membership</Link>
+          </p>
+        </div>
       </main>
     );
   }
@@ -94,6 +98,8 @@ export default function Trial() {
       ) : courts.error || avail.error ? (
         <ErrorBox message={courts.error || avail.error} onRetry={() => { void courts.reload(); void avail.reload(); }} />
       ) : (
+        <>
+        <div className="panel panel-main">
         <div className="form-grid">
           <div>
             <label htmlFor="t-name">Your name</label>
@@ -126,7 +132,15 @@ export default function Trial() {
             </div>
           </div>
           {freeSlots.length === 0 && <div className="notice err">No free slots on {court?.name} that day. Try another court or day.</div>}
-          <div className="panel" style={{ marginTop: 8 }}>
+          {err && <div className="notice err" role="alert">{err}</div>}
+          <div>
+            <button className="btn btn-ink" style={{ width: "100%" }} disabled={freeSlots.length === 0 || busy} onClick={submit}>
+              {busy ? "Booking..." : "Book my trial"}
+            </button>
+          </div>
+        </div>
+        </div>
+          <div className="panel" style={{ marginTop: 16 }}>
             <h3 style={{ marginBottom: 6 }}>Ask the club anything</h3>
             <p className="muted" style={{ marginBottom: 14 }}>Membership, courts, coaching, the shop. Your question lands on the front desk&apos;s list, with the name and phone above.</p>
             <div className="form-grid">
@@ -148,13 +162,7 @@ export default function Trial() {
               </div>
             </div>
           </div>
-          {err && <div className="notice err" role="alert">{err}</div>}
-          <div>
-            <button className="btn btn-ink" disabled={freeSlots.length === 0 || busy} onClick={submit}>
-              {busy ? "Booking..." : "Book my trial"}
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </main>
   );

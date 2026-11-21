@@ -7,7 +7,7 @@ import type { StaffDTO } from "@/lib/types";
 
 const publicLinks = [
   { href: "/courts", label: "Courts" },
-  { href: "/#plans", label: "Membership" },
+  { href: "/#membership", label: "Membership" },
   { href: "/shop", label: "Shop" },
   { href: "/bar", label: "Bar & Café" },
 ];
@@ -19,9 +19,17 @@ const staffLinksFor = (role: StaffDTO["role"]) => {
     { href: "/members", label: "Members" },
     { href: "/enquiries", label: "Enquiries" },
   ];
-  if (role === "OWNER") return [{ href: "/dashboard", label: "Dashboard" }, ...desk];
+  if (role === "OWNER") return [{ href: "/dashboard", label: "Dashboard" }, ...desk, { href: "/bar", label: "Bar" }, { href: "/shop", label: "Shop" }];
   if (role === "FRONT_DESK" || role === "STAFF") return desk;
-  return [];
+  if (role === "BAR") return [{ href: "/bar", label: "Bar" }];
+  return [{ href: "/shop", label: "Shop" }];
+};
+const roleLabel: Record<StaffDTO["role"], string> = {
+  OWNER: "Owner",
+  FRONT_DESK: "Front desk",
+  STAFF: "Staff",
+  BAR: "Bar",
+  SHOP: "Shop",
 };
 
 export default function Nav() {
@@ -51,7 +59,7 @@ export default function Nav() {
     window.location.href = "/";
   }
 
-  const links = staff ? [...publicLinks, ...staffLinksFor(staff.role)] : publicLinks;
+  const links = staff ? staffLinksFor(staff.role) : publicLinks;
 
   return (
     <header className="nav">
@@ -68,13 +76,15 @@ export default function Nav() {
         <div className="nav-end">
           {staff ? (
             <>
-              <span className="staff-name">{staff.name}</span>
+              <span className="staff-chip">{staff.name}<span className="chip-role">{roleLabel[staff.role]}</span></span>
               <button className="btn btn-quiet" onClick={signOut}>Sign out</button>
             </>
           ) : (
-            <Link className="btn btn-quiet" href="/login">Staff sign-in</Link>
+            <>
+              <Link className="btn btn-paper" href="/login">Sign in</Link>
+              <Link className="btn btn-ink" href="/trial">Book a free trial</Link>
+            </>
           )}
-          <Link className="btn btn-ink" href="/trial">Book a free trial</Link>
           <button className="menu-btn" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)}>
             {open ? "✕" : "☰"}
           </button>
@@ -85,11 +95,16 @@ export default function Nav() {
           {links.map((l) => (
             <Link key={l.href} href={l.href}>{l.label}</Link>
           ))}
-          <Link href="/trial">Book a free trial</Link>
           {staff ? (
-            <button className="mobile-signout" onClick={signOut}>Sign out ({staff.name})</button>
+            <>
+              <span className="mobile-chip">{staff.name} · {roleLabel[staff.role]}</span>
+              <button className="mobile-signout" onClick={signOut}>Sign out</button>
+            </>
           ) : (
-            <Link href="/login">Staff sign-in</Link>
+            <>
+              <Link href="/trial">Book a free trial</Link>
+              <Link href="/login">Sign in</Link>
+            </>
           )}
         </nav>
       )}

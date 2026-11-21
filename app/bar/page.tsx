@@ -107,7 +107,7 @@ export default function Bar() {
       <div className="page-head">
         <p className="page-eyebrow">Clubhouse</p>
         <h1 className="page-title">Bar &amp; Café</h1>
-        <p className="sub">Open a tab, add as they order, settle before they leave. The member&apos;s plan discount applies itself at settle. Staff view.</p>
+        <p className="sub">Open a tab, add as they order, settle before they leave. The member&apos;s plan discount applies itself at settle.</p>
       </div>
 
       {menu.loading ? (
@@ -132,7 +132,8 @@ export default function Bar() {
         </>
       ) : (
         <>
-          <div className="field-row" style={{ maxWidth: 640, alignItems: "end" }}>
+          <div className="panel panel-main">
+          <div className="bar-open-grid" style={{ maxWidth: 640 }}>
             <div>
               <label htmlFor="b-who">Open a tab for</label>
               <input id="b-who" value={who} onChange={(e) => setWho(e.target.value)} placeholder="Member or guest name" />
@@ -156,15 +157,19 @@ export default function Bar() {
               </div>
             </div>
           )}
+          </div>
 
           {tab ? (
             <>
-              <div className="panel" style={{ marginTop: 20 }}>
-                <p style={{ fontWeight: 600 }}>
-                  {tab.who}
-                  {tab.tableNo ? `, table ${tab.tableNo}` : ""}
-                  {plan ? `, ${plan.name} plan${plan.barDiscount ? `, ${plan.barDiscount}% off at settle` : ""}` : ", walk-in"}
-                </p>
+              <div className="panel panel-main" style={{ marginTop: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+                  <p style={{ fontWeight: 600 }}>
+                    {tab.who}
+                    {tab.tableNo ? `, table ${tab.tableNo}` : ""}
+                    {plan ? `, ${plan.name} plan${plan.barDiscount ? `, ${plan.barDiscount}% off at settle` : ""}` : ", walk-in"}
+                  </p>
+                  <span className="s-price num">{inr(tab.subtotal)}</span>
+                </div>
                 {tab.items.length > 0 ? (
                   <div className="rows" style={{ marginTop: 10 }}>
                     {tab.items.map((i) => (
@@ -187,7 +192,7 @@ export default function Bar() {
                     </div>
                   </div>
                   <button className="btn btn-ink" disabled={busy || tab.items.length === 0} onClick={settle}>
-                    {busy ? "Settling..." : `Settle tab, ${inr(tab.subtotal)}`}
+                    {busy ? "Settling..." : tab.items.length === 0 ? "No items on tab" : `Settle tab, ${inr(tab.subtotal)}`}
                   </button>
                 </div>
               </div>
@@ -198,7 +203,7 @@ export default function Bar() {
                     <div className="row-main"><p className="row-name">{p.name}</p></div>
                     <span className="num" style={{ fontSize: 15 }}>{inr(p.price)}</span>
                     <div className="stepper">
-                      <button aria-label={`One less ${p.name}`} onClick={() => set(p.id, (draft[p.id] ?? 0) - 1)}>−</button>
+                      <button aria-label={`One less ${p.name}`} disabled={!(draft[p.id] ?? 0)} onClick={() => set(p.id, (draft[p.id] ?? 0) - 1)}>−</button>
                       <b className="num">{draft[p.id] ?? 0}</b>
                       <button aria-label={`One more ${p.name}`} onClick={() => set(p.id, (draft[p.id] ?? 0) + 1)}>+</button>
                     </div>

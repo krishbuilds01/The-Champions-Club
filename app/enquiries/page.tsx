@@ -51,7 +51,7 @@ export default function Enquiries() {
       <div className="page-head">
         <p className="page-eyebrow">Front desk</p>
         <h1 className="page-title">Enquiries</h1>
-        <p className="sub">Every question the club gets, in one list: website, trials and walk-ins. Work them, note the follow-up, convert the good ones. Staff view.</p>
+        <p className="sub">Every question the club gets, in one list: website, trials and walk-ins. Work them, note the follow-up, convert the good ones.</p>
       </div>
 
       {enquiries.loading ? (
