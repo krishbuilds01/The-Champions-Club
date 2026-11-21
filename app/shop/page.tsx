@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { inr } from "@/lib/format";
+import { payOnlineWithRazorpay } from "@/lib/pay-online";
 import { Loading, ErrorBox, Empty } from "@/components/States";
 
 const methods = [
@@ -27,6 +28,7 @@ export default function Shop() {
     () => (name.trim().length >= 3 ? api.lookupMember(name.trim()) : Promise.resolve({ member: null })),
     [name],
   );
+  const payCfg = useApi(() => api.payConfig(), []);
 
   useEffect(() => {
     api.me()
@@ -65,6 +67,29 @@ export default function Shop() {
       void products.reload();
     } catch (e) {
       setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Order failed. Try again." });
+      void products.reload();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function orderOnline() {
+    if (!total && !subtotal) return;
+    const keyId = payCfg.data?.keyId;
+    if (!keyId) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      const items = gear.filter((p) => (cart[p.id] ?? 0) > 0).map((p) => ({ productId: p.id, qty: cart[p.id] }));
+      const r = await api.createOrder({ items, name: name.trim(), phone: phone.trim(), payMethod, fulfilment, address: fulfilment === "DELIVERY" ? address.trim() : undefined, payOnline: true });
+      setCart({});
+      const outcome = await payOnlineWithRazorpay(r, keyId);
+      setMsg(outcome === "paid"
+        ? { ok: true, text: `Paid online, ${inr(r.total)}${r.discount ? ` (member discount ${inr(r.discount)} applied)` : ""}. ${fulfilment === "DELIVERY" ? "We will deliver it to your address." : "We will keep it at the front desk for pickup."}` }
+        : { ok: false, text: "Payment window closed before paying. The order is saved as pending — the desk can take payment at the counter." });
+      void products.reload();
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Online payment failed. Try again, or pay at the counter." });
       void products.reload();
     } finally {
       setBusy(false);
@@ -162,7 +187,7 @@ export default function Shop() {
                       <p className="row-name">{o.name} <span className="muted" style={{ fontWeight: 400 }}>{o.phone}</span>{o.fulfilment === "DELIVERY" && <span className="tag" style={{ marginLeft: 8 }}>Delivery</span>}</p>
                       <p className="muted">{o.items.map((i) => `${i.qty} × ${i.name}`).join(", ")}{o.fulfilment === "DELIVERY" && o.address ? ` · ${o.address}` : ""}</p>
                     </div>
-                    <span className="num">{inr(o.total)} · {o.payMethod}</span>
+                    <span className="num">{inr(o.total)} · {o.payMethod === "ONLINE" ? (o.payState === "PAID" ? "Online, paid" : "Online, pending") : o.payMethod}</span>
                   </div>
                 ))}
               </div>
@@ -189,6 +214,11 @@ export default function Shop() {
                 : fulfilment === "DELIVERY" && address.trim().length < 10 ? "Add the delivery address"
                 : `Order for ${fulfilment === "DELIVERY" ? "delivery" : "pickup"}, ${inr(total)}`}
             </button>
+            {payCfg.data?.enabled && (
+              <button className="btn btn-quiet" style={{ marginTop: 10 }} disabled={!subtotal || !name.trim() || phone.replace(/\D/g, "").length < 10 || (fulfilment === "DELIVERY" && address.trim().length < 10) || busy} onClick={orderOnline}>
+                Pay online (Razorpay test), {inr(total)}
+              </button>
+            )}
           </div>
         </>
       )}

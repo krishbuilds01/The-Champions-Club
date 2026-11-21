@@ -1,4 +1,4 @@
-import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, MemberDTO, MemberHomeDTO, MemberSessionDTO, OrderDTO, PlanDTO, ProductDTO, StaffDTO, TabDTO } from "./types";
+import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, ExpenseDTO, ExpiringDTO, InvoiceDTO, MemberDTO, MemberHomeDTO, MemberSessionDTO, OrderDTO, PayrollDTO, PlanDTO, ProductDTO, ShiftDTO, StaffDTO, StaffRosterDTO, TabDTO } from "./types";
 
 // The web app's one door to the API. Every page fetches through here, so
 // error handling and the base path live in exactly one place. A mobile
@@ -62,6 +62,7 @@ export const api = {
   bookings: (date?: string) => call<BookingDTO[]>(`/bookings${date ? `?date=${date}` : ""}`),
   cancelBooking: (id: number) => post<BookingDTO>(`/bookings/${id}/cancel`),
   members: (q?: string) => call<MemberDTO[]>(`/members${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+  expiringMembers: () => call<ExpiringDTO[]>("/members/expiring"),
   createMember: (input: { name: string; phone?: string; email?: string; planCode: string }) =>
     post<MemberDTO>("/members", input),
   createOrder: (input: {
@@ -71,17 +72,9 @@ export const api = {
     payMethod: "CASH" | "CARD" | "UPI";
     fulfilment?: "PICKUP" | "DELIVERY";
     address?: string;
-  }) => post<OrderDTO>("/orders", input),
+    payOnline?: boolean;
+  }) => post<OrderDTO & { razorpayOrderId?: string }>("/orders", input),
   orders: () => call<OrderDTO[]>("/orders"),
-  adjustStock: (input: { productId: number; delta: number }) =>
-    post<ProductDTO>("/inventory/adjust", input),
-  createProduct: (input: {
-    name: string;
-    price: number;
-    stock?: number;
-    lowAt?: number;
-    category: "GEAR" | "BAR";
-  }) => post<ProductDTO>("/products", input),
   tabs: () => call<TabDTO[]>("/tabs"),
   openTab: (input: { who: string; tableNo?: number }) => post<TabDTO>("/tabs", input),
   addTabItems: (id: number, items: { productId: number; qty: number }[]) =>
@@ -94,6 +87,7 @@ export const api = {
   updateEnquiry: (id: number, patch: { status?: EnquiryDTO["status"]; note?: string }) =>
     call<EnquiryDTO>(`/enquiries/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
   convertEnquiry: (id: number, planCode: string) => post<EnquiryDTO>(`/enquiries/${id}/convert`, { planCode }),
+  quoteEnquiry: (id: number, input: { planCode: string; amount: number; note?: string }) => post<EnquiryDTO>(`/enquiries/${id}/quote`, input),
   dashboard: (date?: string) => call<DashboardDTO>(`/dashboard${date ? `?date=${date}` : ""}`),
   login: (email: string, password: string) => post<{ staff: StaffDTO }>("/auth/login", { email, password }),
   logout: () => post<{ ok: boolean }>("/auth/logout"),
@@ -102,5 +96,5 @@ export const api = {
   memberLogout: () => post<{ ok: boolean }>("/member/logout"),
   memberMe: () => call<MemberHomeDTO>("/member/me"),
   memberBook: (input: { courtId: number; date: string; start: number }) => post<BookingDTO>("/member/bookings", input),
-  memberOrder: (input: { items: { productId: number; qty: number }[]; payMethod: "CASH" | "CARD" | "UPI"; fulfilment?: "PICKUP" | "DELIVERY"; address?: string }) => post<OrderDTO>("/member/orders", input),
+  memberOrder: (input: { items: { productId: number; qty: number }[]; payMethod: "CASH" | "CARD" | "UPI"; fulfilment?: "PICKUP" | "DELIVERY"; address?: string; payOnline?: boolean }) => post<OrderDTO & { razorpayOrderId?: string }>("/member/orders", input),
 };

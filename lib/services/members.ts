@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { db } from "../db";
 import { badRequest, notFound } from "../errors";
 import { todayISO } from "../format";
-import type { MemberDTO, MemberHomeDTO, MemberState } from "../types";
+import type { ExpiringDTO, MemberDTO, MemberHomeDTO, MemberState } from "../types";
 import { toBookingDTO } from "./bookings";
 import { toOrderDTO, toTabDTO } from "./sales";
 
@@ -14,6 +14,21 @@ type MemberRow = {
   expiresOn: Date;
   plan: { name: string; code: string };
 };
+
+// The front desk's renewal chase list: plans ending within the next
+// `withinDays` days (14 by default), soonest first, with days left.
+export async function expiringMembers(withinDays = 14): Promise<ExpiringDTO[]> {
+  const rows = await db.member.findMany({ include: { plan: true }, orderBy: { expiresOn: "asc" } });
+  const today = todayISO();
+  const out: ExpiringDTO[] = [];
+  for (const m of rows) {
+    const exp = m.expiresOn.toISOString().slice(0, 10);
+    const daysLeft = Math.round((Date.parse(exp) - Date.parse(today)) / 86400000);
+    if (daysLeft >= 0 && daysLeft <= withinDays)
+      out.push({ id: m.id, name: m.name, phone: m.phone, planName: m.plan.name, expiresOn: exp, daysLeft });
+  }
+  return out;
+}
 
 // Membership state is derived from the expiry date, never stored, so it
 // can never disagree with the dates.

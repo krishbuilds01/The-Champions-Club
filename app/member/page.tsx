@@ -85,7 +85,7 @@ export default async function MemberHome() {
                   <tr key={o.id}>
                     <td>{o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}{o.fulfilment === "DELIVERY" ? " · Delivery" : ""}</td>
                     <td>{o.createdAt.slice(0, 10)}</td>
-                    <td className="hide-m">{o.payMethod}</td>
+                    <td className="hide-m">{o.payMethod === "ONLINE" ? `Online · ${o.payState === "PAID" ? "paid" : "pending"}` : o.payMethod}</td>
                     <td className="r">{inr(o.total)}</td>
                   </tr>
                 ))}

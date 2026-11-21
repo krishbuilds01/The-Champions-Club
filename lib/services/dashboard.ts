@@ -3,6 +3,7 @@ import { badRequest } from "../errors";
 import { addDaysISO, isISODate, istDayStart } from "../format";
 import type { DashboardDTO, MoneySplit } from "../types";
 import { toBookingDTO } from "./bookings";
+import { expiringMembers } from "./members";
 
 // The owner's money in one read: courts + shop + bar for today, the last
 // 7 days and the last 30 days, how the day was paid, who is on court,
@@ -18,7 +19,9 @@ async function sums(fromISO: string, toISO: string): Promise<MoneySplit> {
       _sum: { price: true },
     }),
     db.order.findMany({
-      where: { createdAt: { gte: istDayStart(fromISO), lt: istDayStart(addDaysISO(toISO, 1)) } },
+      // A pending online order is not money yet; it joins the takings
+      // when its payment confirms.
+      where: { createdAt: { gte: istDayStart(fromISO), lt: istDayStart(addDaysISO(toISO, 1)) }, payState: { not: "PENDING" } },
       select: { total: true },
     }),
     db.tab.findMany({
@@ -38,7 +41,7 @@ async function sums(fromISO: string, toISO: string): Promise<MoneySplit> {
 export async function getDashboard(date: string): Promise<DashboardDTO> {
   if (!isISODate(date)) throw badRequest("Date must be YYYY-MM-DD");
 
-  const [today, week, month, dayOrders, dayTabs, onCourt, low] = await Promise.all([
+  const [today, week, month, dayOrders, dayTabs, onCourt, low, expiring] = await Promise.all([
     sums(date, date),
     sums(addDaysISO(date, -6), date),
     sums(addDaysISO(date, -29), date),
@@ -56,6 +59,7 @@ export async function getDashboard(date: string): Promise<DashboardDTO> {
       orderBy: { start: "asc" },
     }),
     db.product.findMany({ where: { category: "GEAR" }, orderBy: { stock: "asc" } }),
+    expiringMembers(14),
   ]);
 
   const byMethodMap = new Map<string, number>();
@@ -67,12 +71,13 @@ export async function getDashboard(date: string): Promise<DashboardDTO> {
     totals: today,
     periods: { today, week, month },
     byMethod: [...byMethodMap.entries()].map(([method, amount]) => ({
-      method: method as "CASH" | "CARD" | "UPI",
+      method: method as "CASH" | "CARD" | "UPI" | "ONLINE",
       amount,
     })),
     onCourt: onCourt.map(toBookingDTO),
     lowStock: low
       .filter((p) => p.stock !== null && p.stock <= p.lowAt)
       .map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, lowAt: p.lowAt, category: p.category })),
+    expiring,
   };
 }

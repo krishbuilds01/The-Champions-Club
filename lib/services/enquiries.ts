@@ -15,6 +15,10 @@ type EnquiryRow = {
   message: string;
   status: EnquiryDTO["status"];
   note: string;
+  quotePlan: string | null;
+  quoteAmount: number | null;
+  quoteNote: string;
+  quotedAt: Date | null;
   memberId: number | null;
   createdAt: Date;
 };
@@ -27,6 +31,10 @@ const toDTO = (e: EnquiryRow): EnquiryDTO => ({
   message: e.message,
   status: e.status,
   note: e.note,
+  quotePlan: e.quotePlan,
+  quoteAmount: e.quoteAmount,
+  quoteNote: e.quoteNote,
+  quotedAt: e.quotedAt?.toISOString() ?? null,
   memberId: e.memberId,
   createdAt: e.createdAt.toISOString(),
 });
@@ -53,6 +61,32 @@ export async function updateEnquiry(
   const row = await db.enquiry.findUnique({ where: { id } });
   if (!row) throw notFound("No such enquiry");
   const updated = await db.enquiry.update({ where: { id }, data: input });
+  return toDTO(updated);
+}
+
+// Record the quote staff sent (plan, price, note) and move the
+// enquiry to QUOTED. Sending happens on the phone or WhatsApp as
+// usual — this is the club's record that it went, and for how much.
+export async function quoteEnquiry(
+  id: number,
+  input: { planCode: string; amount: number; note: string },
+): Promise<EnquiryDTO> {
+  const row = await db.enquiry.findUnique({ where: { id } });
+  if (!row) throw notFound("No such enquiry");
+  if (row.status === "CONVERTED" || row.status === "LOST")
+    throw conflict("That enquiry is closed — no quote to send");
+  const plan = await db.plan.findUnique({ where: { code: input.planCode } });
+  if (!plan) throw badRequest("Pick a plan that exists");
+  const updated = await db.enquiry.update({
+    where: { id },
+    data: {
+      status: "QUOTED",
+      quotePlan: plan.name,
+      quoteAmount: input.amount,
+      quoteNote: input.note,
+      quotedAt: new Date(),
+    },
+  });
   return toDTO(updated);
 }
 

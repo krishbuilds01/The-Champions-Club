@@ -50,6 +50,7 @@ enum PayMethod {
   CASH
   CARD
   UPI
+  ONLINE // Razorpay checkout (test mode)
 }
 
 model Plan {
@@ -132,6 +133,9 @@ model Order {
   payMethod PayMethod
   fulfilment String     @default("PICKUP") // PICKUP | DELIVERY
   address   String? // delivery address, set only for DELIVERY
+  payState  String      @default("PAID") // PENDING | PAID — online orders start PENDING
+  razorpayOrderId   String?
+  razorpayPaymentId String?
   createdAt DateTime    @default(now())
   items     OrderItem[]
 
@@ -169,6 +173,39 @@ model Tab {
   @@index([settledAt])
 }
 
+// Owner finance, kept light: bills the club sends out, money going
+// out, and the monthly staff pay record. One small table each.
+model Invoice {
+  id       Int       @id @default(autoincrement())
+  billedTo String // member or business client
+  detail   String    @default("") // what it is for
+  amount   Int // rupees
+  status   String    @default("UNPAID") // UNPAID | PAID
+  issuedOn DateTime  @default(now())
+  paidAt   DateTime?
+}
+
+model Expense {
+  id        Int      @id @default(autoincrement())
+  title     String
+  category  String   @default("General") // Rent, Utilities, Supplies, Maintenance, Other
+  amount    Int // rupees
+  spentOn   DateTime // the day the money went out (UTC date)
+  note      String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model Payroll {
+  id        Int      @id @default(autoincrement())
+  staffName String
+  month     String // "2026-11"
+  salary    Int // rupees for the month
+  leaveDays Int      @default(0)
+  tax       Int      @default(0) // tax deducted, rupees
+  status    String   @default("PENDING") // PENDING | PAID
+  createdAt DateTime @default(now())
+}
+
 model Enquiry {
   id        Int           @id @default(autoincrement())
   name      String
@@ -177,6 +214,10 @@ model Enquiry {
   message   String        @default("")
   status    EnquiryStatus @default(NEW)
   note      String        @default("") // staff follow-up note
+  quotePlan   String? // plan name on the quote sent, if any
+  quoteAmount Int? // rupees quoted
+  quoteNote   String        @default("") // what the quote covered
+  quotedAt    DateTime? // when the quote was sent/recorded
   memberId  Int? // set when the enquiry converts to a member
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -197,10 +238,23 @@ model TabItem {
 }
 
 model Staff {
-  id           Int    @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   name         String
-  email        String @unique
+  email        String  @unique
   passwordHash String
   pinHash      String?
-  role         Role   @default(STAFF)
+  role         Role    @default(STAFF)
+  shifts       Shift[]
+}
+
+// The rota: who works which part of which day. One row per assignment.
+model Shift {
+  id        Int      @id @default(autoincrement())
+  staffId   Int
+  staff     Staff    @relation(fields: [staffId], references: [id])
+  date      DateTime // the day (UTC date)
+  part      String // MORNING | EVENING
+  createdAt DateTime @default(now())
+
+  @@unique([staffId, date, part])
 }

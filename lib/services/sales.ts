@@ -1,6 +1,7 @@
 import { db } from "../db";
-import { badRequest, conflict, notFound } from "../errors";
+import { badRequest, conflict, forbidden, notFound } from "../errors";
 import { istDayStart, todayISO } from "../format";
+import { createRazorpayOrder, razorpayConfigured, verifyPaymentSignature } from "../razorpay";
 import type { OrderDTO, TabDTO } from "../types";
 import { memberState, findMemberByName } from "./members";
 
@@ -31,16 +32,19 @@ export async function createOrder(input: {
   payMethod: "CASH" | "CARD" | "UPI";
   fulfilment?: "PICKUP" | "DELIVERY";
   address?: string;
+  payOnline?: boolean;
 }) {
   const fulfilment = input.fulfilment ?? "PICKUP";
   const address = fulfilment === "DELIVERY" ? (input.address ?? "").trim() : "";
   if (fulfilment === "DELIVERY" && address.length < 10)
     throw badRequest("Add the full delivery address");
+  if (input.payOnline && !razorpayConfigured())
+    throw badRequest("Online payment is not switched on yet. Pay at the counter instead.");
   const member = await findMemberByName(input.name);
   const active = member && memberState(member.expiresOn) === "active";
   const discountPct = active ? member.plan.shopDiscount : 0;
 
-  return db.$transaction(async (tx) => {
+  const created = await db.$transaction(async (tx) => {
     const lines = await priceItems(input.items, "GEAR");
     for (const l of lines) {
       if (l.product.stock !== null && l.qty > l.product.stock)
@@ -60,7 +64,8 @@ export async function createOrder(input: {
         subtotal,
         discount,
         total: subtotal - discount,
-        payMethod: input.payMethod,
+        payMethod: input.payOnline ? "ONLINE" : input.payMethod,
+        payState: input.payOnline ? "PENDING" : "PAID",
         fulfilment,
         address: address || null,
         items: {
@@ -73,8 +78,44 @@ export async function createOrder(input: {
       if (l.product.stock !== null)
         await tx.product.update({ where: { id: l.product.id }, data: { stock: { decrement: l.qty } } });
     }
-    return toOrderDTO(order);
+    return order;
   });
+
+  if (!input.payOnline) return toOrderDTO(created as OrderRow);
+  // Online: open the Razorpay order and hand its id to the client for
+  // checkout. If this fails the order stays PENDING for the desk to
+  // chase — stock is already held, nothing is silently lost.
+  const razorpayOrderId = await createRazorpayOrder(created.id, created.total);
+  const withRp = await db.order.update({
+    where: { id: created.id },
+    data: { razorpayOrderId },
+    include: { items: { include: { product: true } } },
+  });
+  return { ...toOrderDTO(withRp as OrderRow), razorpayOrderId };
+}
+
+// The client returns from Razorpay checkout with a signed payment
+// proof; only a valid signature flips the order to PAID.
+export async function confirmPayment(
+  orderId: number,
+  proof: { razorpayOrderId: string; paymentId: string; signature: string },
+): Promise<OrderDTO> {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { items: { include: { product: true } } },
+  });
+  if (!order) throw notFound("No such order");
+  if (order.payState === "PAID") return toOrderDTO(order as OrderRow);
+  if (order.razorpayOrderId !== proof.razorpayOrderId)
+    throw badRequest("That payment does not belong to this order");
+  if (!verifyPaymentSignature(proof.razorpayOrderId, proof.paymentId, proof.signature))
+    throw forbidden("Payment could not be verified");
+  const updated = await db.order.update({
+    where: { id: orderId },
+    data: { payState: "PAID", razorpayPaymentId: proof.paymentId },
+    include: { items: { include: { product: true } } },
+  });
+  return toOrderDTO(updated as OrderRow);
 }
 
 type OrderRow = {
@@ -84,7 +125,8 @@ type OrderRow = {
   subtotal: number;
   discount: number;
   total: number;
-  payMethod: "CASH" | "CARD" | "UPI";
+  payMethod: "CASH" | "CARD" | "UPI" | "ONLINE";
+  payState: string;
   fulfilment: string;
   address: string | null;
   createdAt: Date;
@@ -99,6 +141,7 @@ export const toOrderDTO = (o: OrderRow): OrderDTO => ({
   discount: o.discount,
   total: o.total,
   payMethod: o.payMethod,
+  payState: o.payState === "PENDING" ? "PENDING" : "PAID",
   fulfilment: o.fulfilment === "DELIVERY" ? "DELIVERY" : "PICKUP",
   address: o.address,
   createdAt: o.createdAt.toISOString(),

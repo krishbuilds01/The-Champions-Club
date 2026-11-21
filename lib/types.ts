@@ -54,9 +54,60 @@ export type DashboardDTO = {
   date: string;
   totals: MoneySplit;
   periods: { today: MoneySplit; week: MoneySplit; month: MoneySplit };
-  byMethod: { method: "CASH" | "CARD" | "UPI"; amount: number }[];
+  byMethod: { method: "CASH" | "CARD" | "UPI" | "ONLINE"; amount: number }[];
   onCourt: BookingDTO[];
   lowStock: ProductDTO[];
+  expiring: ExpiringDTO[];
+};
+
+export type InvoiceDTO = {
+  id: number;
+  billedTo: string;
+  detail: string;
+  amount: number;
+  status: "UNPAID" | "PAID";
+  issuedOn: string;
+  paidAt: string | null;
+};
+
+export type ExpenseDTO = {
+  id: number;
+  title: string;
+  category: string;
+  amount: number;
+  spentOn: string;
+  note: string;
+};
+
+export type PayrollDTO = {
+  id: number;
+  staffName: string;
+  month: string;
+  salary: number;
+  leaveDays: number;
+  tax: number;
+  net: number;
+  status: "PENDING" | "PAID";
+};
+
+export type StaffRosterDTO = { id: number; name: string; role: string };
+
+export type ShiftDTO = {
+  id: number;
+  staffId: number;
+  staffName: string;
+  role: string;
+  date: string;
+  part: "MORNING" | "EVENING";
+};
+
+export type ExpiringDTO = {
+  id: number;
+  name: string;
+  phone: string;
+  planName: string;
+  expiresOn: string;
+  daysLeft: number;
 };
 
 export type TabDTO = {
@@ -80,6 +131,10 @@ export type EnquiryDTO = {
   message: string;
   status: "NEW" | "CONTACTED" | "QUOTED" | "CONVERTED" | "LOST";
   note: string;
+  quotePlan: string | null;
+  quoteAmount: number | null;
+  quoteNote: string;
+  quotedAt: string | null;
   memberId: number | null;
   createdAt: string;
 };
@@ -91,7 +146,8 @@ export type OrderDTO = {
   subtotal: number;
   discount: number;
   total: number;
-  payMethod: "CASH" | "CARD" | "UPI";
+  payMethod: "CASH" | "CARD" | "UPI" | "ONLINE";
+  payState: "PENDING" | "PAID";
   fulfilment: "PICKUP" | "DELIVERY";
   address: string | null;
   createdAt: string;

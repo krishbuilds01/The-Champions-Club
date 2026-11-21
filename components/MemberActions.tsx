@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { allStarts, fmtTime, inr, istMinutesNow, todayISO } from "@/lib/format";
+import { payOnlineWithRazorpay } from "@/lib/pay-online";
 
 // Book a court and order from the shop, as the signed-in member.
 // Both post to the member routes, which run the same services (and
@@ -13,6 +14,7 @@ export default function MemberActions() {
   const today = todayISO();
   const courts = useApi(() => api.courts(), []);
   const products = useApi(() => api.products("GEAR"), []);
+  const payCfg = useApi(() => api.payConfig(), []);
 
   const [courtId, setCourtId] = useState(1);
   const [date, setDate] = useState(today);
@@ -55,12 +57,21 @@ export default function MemberActions() {
   const [orderMsg, setOrderMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [orderBusy, setOrderBusy] = useState(false);
 
-  async function order() {
+  async function order(payOnline = false) {
+    const keyId = payCfg.data?.keyId;
+    if (payOnline && !keyId) return;
     setOrderBusy(true);
     setOrderMsg(null);
     try {
-      const o = await api.memberOrder({ items, payMethod: pay, fulfilment, address: fulfilment === "DELIVERY" ? address.trim() : undefined });
-      setOrderMsg({ ok: true, text: `Order placed — ${inr(o.total)}${o.discount ? `, you saved ${inr(o.discount)}` : ""}. ${fulfilment === "DELIVERY" ? "We will deliver it to your address." : "Pick it up at the shop counter."}` });
+      const o = await api.memberOrder({ items, payMethod: pay, fulfilment, address: fulfilment === "DELIVERY" ? address.trim() : undefined, payOnline });
+      if (payOnline) {
+        const outcome = await payOnlineWithRazorpay(o, keyId!);
+        setOrderMsg(outcome === "paid"
+          ? { ok: true, text: `Paid online — ${inr(o.total)}${o.discount ? `, you saved ${inr(o.discount)}` : ""}. ${fulfilment === "DELIVERY" ? "We will deliver it to your address." : "Pick it up at the shop counter."}` }
+          : { ok: false, text: "Payment window closed before paying. The order is saved as pending — the desk can take payment at the counter." });
+      } else {
+        setOrderMsg({ ok: true, text: `Order placed — ${inr(o.total)}${o.discount ? `, you saved ${inr(o.discount)}` : ""}. ${fulfilment === "DELIVERY" ? "We will deliver it to your address." : "Pick it up at the shop counter."}` });
+      }
       setCart({});
       router.refresh();
     } catch (e) {
@@ -148,9 +159,14 @@ export default function MemberActions() {
           </div>
         </div>
         {orderMsg && <div className={`notice ${orderMsg.ok ? "ok" : "err"}`} role="status" style={{ marginTop: 14 }}>{orderMsg.text}</div>}
-        <button className="btn btn-ink" style={{ marginTop: 16 }} disabled={orderBusy || items.length === 0 || (fulfilment === "DELIVERY" && address.trim().length < 10)} onClick={order}>
+        <button className="btn btn-ink" style={{ marginTop: 16 }} disabled={orderBusy || items.length === 0 || (fulfilment === "DELIVERY" && address.trim().length < 10)} onClick={() => order(false)}>
           {orderBusy ? "Placing..." : items.length ? `Place order · ${inr(subtotal)} before discount` : "Place order"}
         </button>
+        {payCfg.data?.enabled && (
+          <button className="btn btn-quiet" style={{ marginTop: 10 }} disabled={orderBusy || items.length === 0 || (fulfilment === "DELIVERY" && address.trim().length < 10)} onClick={() => order(true)}>
+            Pay online (Razorpay test)
+          </button>
+        )}
         </div>
       </section>
     </div>

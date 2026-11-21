@@ -54,9 +54,44 @@ export const orderInput = z.object({
   payMethod: z.enum(["CASH", "CARD", "UPI"]),
   fulfilment: z.enum(["PICKUP", "DELIVERY"]).optional().default("PICKUP"),
   address: z.string().trim().max(300).optional(),
+  payOnline: z.boolean().optional().default(false),
 });
 
-export const memberOrderInput = orderInput.pick({ items: true, payMethod: true, fulfilment: true, address: true });
+export const memberOrderInput = orderInput.pick({ items: true, payMethod: true, fulfilment: true, address: true, payOnline: true });
+
+export const invoiceInput = z.object({
+  billedTo: z.string().trim().min(2, "Who is this bill for?").max(80),
+  detail: z.string().trim().max(200).optional().default(""),
+  amount: z.number().int().positive("The invoice needs an amount").max(100000000),
+});
+
+export const expenseInput = z.object({
+  title: z.string().trim().min(2, "What was this for?").max(80),
+  category: z.enum(["Rent", "Utilities", "Supplies", "Maintenance", "Other"]).optional().default("Other"),
+  amount: z.number().int().positive("The expense needs an amount").max(100000000),
+  spentOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+  note: z.string().trim().max(200).optional().default(""),
+});
+
+export const payrollInput = z.object({
+  staffName: z.string().trim().min(2, "Which staff member?").max(80),
+  month: z.string().regex(/^\d{4}-\d{2}$/, "Month must be YYYY-MM"),
+  salary: z.number().int().positive("Salary is missing").max(100000000),
+  leaveDays: z.number().int().min(0).max(31).optional().default(0),
+  tax: z.number().int().min(0).max(100000000).optional().default(0),
+});
+
+export const shiftInput = z.object({
+  staffId: z.number().int().positive(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+  part: z.enum(["MORNING", "EVENING"]),
+});
+
+export const payConfirmInput = z.object({
+  razorpayOrderId: z.string().min(1).max(80),
+  paymentId: z.string().min(1).max(80),
+  signature: z.string().min(1).max(200),
+});
 
 export const tabOpenInput = z.object({
   who: z.string().trim().min(1, "The tab needs a name").max(80),
@@ -82,6 +117,12 @@ export const enquiryPatchInput = z.object({
 });
 
 export const convertInput = z.object({ planCode: z.string().min(1) });
+
+export const quoteInput = z.object({
+  planCode: z.string().min(1),
+  amount: z.number().int().positive("The quote needs an amount").max(10000000),
+  note: z.string().trim().max(300).optional().default(""),
+});
 
 export const loginInput = z.object({
   email: z.string().trim().email("That email does not look right"),

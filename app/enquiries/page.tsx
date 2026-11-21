@@ -4,6 +4,7 @@ import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { Loading, ErrorBox, Empty } from "@/components/States";
 import type { EnquiryDTO } from "@/lib/types";
+import { inr } from "@/lib/format";
 
 const statuses: EnquiryDTO["status"][] = ["NEW", "CONTACTED", "QUOTED", "CONVERTED", "LOST"];
 
@@ -13,6 +14,8 @@ export default function Enquiries() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [planFor, setPlanFor] = useState<Record<number, string>>({});
+  const [quoteAmt, setQuoteAmt] = useState<Record<number, string>>({});
+  const [quoteNotes, setQuoteNotes] = useState<Record<number, string>>({});
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const list = enquiries.data ?? [];
@@ -25,6 +28,27 @@ export default function Enquiries() {
       void enquiries.reload();
     } catch (e) {
       setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Saving failed. Try again." });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function quote(e: EnquiryDTO) {
+    const planCode = planFor[e.id] ?? plans.data?.[0]?.code;
+    const amount = Number(quoteAmt[e.id] ?? e.quoteAmount ?? "");
+    if (!planCode) return;
+    if (!Number.isInteger(amount) || amount <= 0) {
+      setMsg({ ok: false, text: `Add the quote amount for ${e.name} first.` });
+      return;
+    }
+    setBusyId(e.id);
+    setMsg(null);
+    try {
+      const q = await api.quoteEnquiry(e.id, { planCode, amount, note: (quoteNotes[e.id] ?? e.quoteNote).trim() });
+      setMsg({ ok: true, text: `Quote recorded as sent to ${e.name} — ${q.quotePlan} at ${inr(q.quoteAmount ?? amount)}.` });
+      void enquiries.reload();
+    } catch (err) {
+      setMsg({ ok: false, text: err instanceof ApiClientError ? err.message : "Quote failed. Try again." });
     } finally {
       setBusyId(null);
     }
@@ -77,6 +101,14 @@ export default function Enquiries() {
                     {e.contact} · {new Date(e.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   </p>
                   {e.message && <p style={{ marginTop: 4 }}>{e.message}</p>}
+                  {e.quoteAmount !== null && (
+                    <p style={{ marginTop: 6 }}>
+                      <span className="tag">Quote sent</span>{" "}
+                      <strong>{e.quotePlan} · {inr(e.quoteAmount)}</strong>
+                      {e.quotedAt ? <span className="muted"> · {new Date(e.quotedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span> : null}
+                      {e.quoteNote ? <span className="muted"> — {e.quoteNote}</span> : null}
+                    </p>
+                  )}
                   <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                     <input
                       aria-label={`Follow-up note for ${e.name}`}
@@ -107,6 +139,28 @@ export default function Enquiries() {
                     )}
                     {e.status === "CONVERTED" && <span className="muted" style={{ alignSelf: "center" }}>Member ✓</span>}
                   </div>
+                  {e.status !== "CONVERTED" && e.status !== "LOST" && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                      <input
+                        aria-label={`Quote amount for ${e.name}`}
+                        placeholder="Quote ₹ (uses the plan picked above)"
+                        inputMode="numeric"
+                        value={quoteAmt[e.id] ?? (e.quoteAmount !== null ? String(e.quoteAmount) : "")}
+                        onChange={(ev) => setQuoteAmt((q) => ({ ...q, [e.id]: ev.target.value.replace(/\D/g, "") }))}
+                        style={{ minWidth: 200 }}
+                      />
+                      <input
+                        aria-label={`Quote note for ${e.name}`}
+                        placeholder="Quote note — what it covers"
+                        value={quoteNotes[e.id] ?? e.quoteNote}
+                        onChange={(ev) => setQuoteNotes((q) => ({ ...q, [e.id]: ev.target.value }))}
+                        style={{ minWidth: 200 }}
+                      />
+                      <button className="btn btn-quiet" disabled={busyId === e.id} onClick={() => quote(e)}>
+                        {e.quoteAmount !== null ? "Update quote" : "Send quote"}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <select
                   style={{ width: "auto", minWidth: 140, flexShrink: 0 }}
