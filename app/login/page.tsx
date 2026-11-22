@@ -87,10 +87,10 @@ export default function Login() {
         </div>
       </div>
 
-      </div>
-      <p className="member-link">
+      <p className="member-link" style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 2 }}>
         A club member? <Link href="/member/login">Member sign in</Link>
       </p>
+      </div>
     </main>
   );
 }

@@ -428,3 +428,14 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
 .method-grid .m-item b { font-family: var(--font-display), sans-serif; font-size: 22px; font-weight: 700; line-height: 1.1; }
 .method-grid .m-item span { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 @media (max-width: 640px) { .enq-card { padding: 16px; } }
+
+/* two-column work layout: main flow + sticky side panel (booking card, checkout) */
+.work-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+.work-grid.even { grid-template-columns: 1fr 1fr; }
+.work-side { position: sticky; top: 92px; }
+.work-side .summary { flex-direction: column; align-items: stretch; }
+.work-side .summary .btn { width: 100%; }
+@media (max-width: 960px) {
+  .work-grid, .work-grid.even { grid-template-columns: 1fr; }
+  .work-side { position: static; }
+}

@@ -112,6 +112,7 @@ export default function Courts() {
       ) : courts.error ? (
         <ErrorBox message={courts.error} onRetry={courts.reload} />
       ) : (
+        <div className="work-grid">
         <div className="panel panel-main">
           <div className="step">
             <div className="step-head">
@@ -163,13 +164,15 @@ export default function Courts() {
               </div>
             )}
           </div>
+        </div>
 
-          <div className="step">
+        <div className="panel work-side">
+          <div>
             <div className="step-head">
               <span className="step-n">3</span>
               <h3>Your details</h3>
-              <span className="step-hint">Members: your registered name gets your plan price</span>
             </div>
+            <p className="muted" style={{ marginBottom: 12 }}>Members: your registered name gets your plan price.</p>
             {!meKnown ? null : !canBook ? (
               <p className="muted" style={{ maxWidth: 520 }}>
                 Bookings are made at the front desk, so this page shows live availability for everyone.
@@ -177,7 +180,7 @@ export default function Courts() {
                 {staff ? "." : <> or <Link className="text-link" href="/login">sign in as staff</Link> to book.</>}
               </p>
             ) : (
-            <div style={{ maxWidth: 420 }}>
+            <div>
               <label htmlFor="name">Your name</label>
               <input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Members: your registered name" />
             </div>
@@ -222,6 +225,7 @@ export default function Courts() {
               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 
