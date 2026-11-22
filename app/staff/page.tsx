@@ -67,6 +67,14 @@ export default function StaffPage() {
         <p className="page-eyebrow">Owner</p>
         <h1 className="page-title">Staff</h1>
         <p className="sub">Who can sign in, and with which role. New accounts sign in with the email and password you set here.</p>
+        {list.length > 0 && (
+          <div className="stat-chips">
+            <span className="stat-chip">{list.length} on the team</span>
+            {ROLES.filter((r) => list.some((s) => s.role === r)).map((r) => (
+              <span className="stat-chip" key={r}>{list.filter((s) => s.role === r).length} {r.replace("_", " ").toLowerCase()}</span>
+            ))}
+          </div>
+        )}
       </div>
 
       {me.loading || roster.loading ? (
@@ -87,9 +95,9 @@ export default function StaffPage() {
                   {list.map((s) => (
                     <tr key={s.id}>
                       <td style={{ fontWeight: 500 }}>{s.name}</td>
-                      <td>{s.role}</td>
+                      <td><span className="tag">{s.role.replace("_", " ")}</span></td>
                       <td className="r">
-                        <button className="btn btn-quiet" disabled={busyId === s.id} onClick={() => remove(s.id, s.name)}>
+                        <button className="btn btn-quiet btn-small" disabled={busyId === s.id} onClick={() => remove(s.id, s.name)}>
                           {busyId === s.id ? "Removing..." : "Remove"}
                         </button>
                       </td>
