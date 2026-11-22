@@ -1,6 +1,6 @@
 import { handle, body } from "@/lib/http";
 import { currentStaff, toggleStaffClock } from "@/lib/auth";
-import { badRequest, unauthorized } from "@/lib/errors";
+import { unauthorized } from "@/lib/errors";
 
 export const POST = (req: Request) =>
   handle(async () => {

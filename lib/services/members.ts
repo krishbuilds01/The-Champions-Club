@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { Prisma } from "@prisma/client";
 import { db } from "../db";
-import { badRequest, conflict, notFound } from "../errors";
+import { badRequest, notFound } from "../errors";
 import { addDaysISO, todayISO } from "../format";
 import type { ExpiringDTO, MemberDTO, MemberHomeDTO, MemberState } from "../types";
 import { toBookingDTO } from "./bookings";

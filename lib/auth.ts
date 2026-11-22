@@ -600,7 +600,7 @@ export async function currentStaff(): Promise<StaffDTO | null> {
 
 const MEMBER_COOKIE = "cc_member_session";
 
-export type MemberSession = MemberSessionDTO;
+
 
 export const toMemberSessionDTO = (m: {
   id: number;

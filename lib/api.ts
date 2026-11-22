@@ -1,4 +1,4 @@
-import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, ExpenseDTO, ExpiringDTO, InvoiceDTO, LeaveDTO, MemberDTO, MemberHomeDTO, MemberSessionDTO, OrderDTO, PayrollDTO, PlanDTO, ProductDTO, RolePinDTO, ShiftDTO, StaffDTO, StaffMemberPinDTO, StaffRosterDTO, TabDTO, TaxSummaryDTO } from "./types";
+import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, ExpenseDTO, InvoiceDTO, LeaveDTO, MemberDTO, MemberSessionDTO, OrderDTO, PayrollDTO, PlanDTO, ProductDTO, RolePinDTO, ShiftDTO, StaffDTO, StaffMemberPinDTO, StaffRosterDTO, TabDTO, TaxSummaryDTO } from "./types";
 
 // The web app's one door to the API. Every page fetches through here, so
 // error handling and the base path live in exactly one place. A mobile
@@ -37,7 +37,6 @@ export const api = {
     call<ProductDTO[]>(`/products${category ? `?category=${category}` : ""}`),
   availability: (courtId: number, date: string) =>
     call<{ taken: { start: number; type: "REGULAR" | "TRIAL" | "FRIDAY_SOCIAL" }[] }>(`/availability?courtId=${courtId}&date=${date}`),
-  schedule: (date: string) => call<BookingDTO[]>(`/schedule?date=${date}`),
   lookupMember: (name: string) =>
     call<{
       member: {
@@ -63,7 +62,6 @@ export const api = {
   bookings: (date?: string) => call<BookingDTO[]>(`/bookings${date ? `?date=${date}` : ""}`),
   cancelBooking: (id: number) => post<BookingDTO>(`/bookings/${id}/cancel`),
   members: (q?: string) => call<MemberDTO[]>(`/members${q ? `?q=${encodeURIComponent(q)}` : ""}`),
-  expiringMembers: () => call<ExpiringDTO[]>("/members/expiring"),
   createMember: (input: {
     name: string;
     phone?: string;
@@ -176,8 +174,6 @@ export const api = {
     post<{ ok: boolean; message: string; paymentRef: string; paidAt: string }>("/staff/pay-salary", input),
   toggleStaffClock: (staffId?: number) =>
     post<{ ok: boolean; status: string; hours?: number; message: string }>("/staff/clock", { staffId }),
-  updateRolePin: (role: string, pin: string) => post<{ ok: boolean; message: string }>("/staff/pins", { role, pin }),
-  resetRolePin: (role: string) => post<{ ok: boolean; message: string }>("/staff/pins", { role, reset: true }),
   logout: () => post<{ ok: boolean }>("/auth/logout"),
   me: () => call<{ staff: StaffDTO }>("/auth/me"),
   memberSignup: (input: {
@@ -192,19 +188,11 @@ export const api = {
     dateOfBirth?: string;
   }) =>
     post<{ ok: boolean; member: MemberSessionDTO }>("/auth/member/signup", input),
-  memberLogin: (input: { identifier: string; password: string } | string, password?: string) => {
-    if (typeof input === "string") {
-      return post<{ member: MemberSessionDTO }>("/member/login", { email: input, password });
-    }
-    return post<{ ok: boolean; member: MemberSessionDTO }>("/auth/member/login", input);
-  },
-  googleDemoLogin: (data: { email: string; name?: string; planCode?: string }) =>
-    post<{ ok: boolean; member: MemberSessionDTO; token: string }>("/auth/google/demo", data),
+  memberLogin: (input: { identifier: string; password: string }) =>
+    post<{ ok: boolean; member: MemberSessionDTO }>("/auth/member/login", input),
   memberLogout: () => post<{ ok: boolean }>("/auth/member/logout"),
   memberMe: () => call<{ member: MemberSessionDTO | null }>("/auth/member/me"),
-  memberHome: () => call<MemberHomeDTO>("/member/me"),
   buyPlan: (planCode: string) => post<{ ok: boolean; member: MemberDTO }>("/members/buy-plan", { planCode }),
   memberBook: (input: { courtId: number; date: string; start: number }) => post<BookingDTO>("/member/bookings", input),
-  memberRenew: () => post<MemberDTO>("/member/renew", {}),
   memberOrder: (input: { items: { productId: number; qty: number }[]; payMethod: "CASH" | "CARD" | "UPI"; fulfilment?: "PICKUP" | "DELIVERY"; address?: string; payOnline?: boolean }) => post<OrderDTO & { razorpayOrderId?: string }>("/member/orders", input),
 };
