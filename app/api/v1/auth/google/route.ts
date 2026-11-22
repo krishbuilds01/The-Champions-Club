@@ -5,6 +5,8 @@ import { getGoogleRedirectUri, safeNextPath } from "@/lib/auth";
 
 // Google sign-in / sign-up initiation strictly for club members & users.
 // Staff and Owner access is restricted to secure role PINs.
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get("type") || "member";
   if (type === "staff") {

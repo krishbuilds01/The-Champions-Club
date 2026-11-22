@@ -823,16 +823,29 @@ export const safeNextPath = (next: string | null | undefined): string => {
   return next;
 };
 
-export const GOOGLE_REDIRECT_URI = "https://the-champions-club.vercel.app/api/v1/auth/google/callback";
+export const GOOGLE_REDIRECT_URI = "https://thechampionsclub.netlify.app/api/v1/auth/google/callback";
 
 export function getGoogleRedirectUri(req?: { headers: { get: (name: string) => string | null }; nextUrl?: { host?: string; protocol?: string } }): string {
-  if (process.env.GOOGLE_REDIRECT_URI) return process.env.GOOGLE_REDIRECT_URI.trim();
+  // Dynamically resolve from incoming request headers (works on Netlify, localhost, Vercel, etc.)
   if (req) {
-    const host = req.headers.get("x-forwarded-host") || req.nextUrl?.host;
-    if (host && (host.startsWith("localhost") || host.startsWith("127.0.0.1"))) {
-      const proto = req.headers.get("x-forwarded-proto") || (req.nextUrl?.protocol ? req.nextUrl.protocol.replace(":", "") : "http");
+    const rawHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || req.nextUrl?.host;
+    if (rawHost) {
+      const host = rawHost.replace("the-champions-club.netlify.app", "thechampionsclub.netlify.app");
+      const cleanHost = host.split(":")[0];
+      const isLocal = cleanHost === "localhost" || cleanHost === "127.0.0.1";
+      const proto = req.headers.get("x-forwarded-proto") || (isLocal ? "http" : "https");
       return `${proto}://${host}/api/v1/auth/google/callback`;
     }
   }
+
+  // If explicitly configured in environment, normalize any hyphenated Netlify typos
+  if (process.env.GOOGLE_REDIRECT_URI) {
+    return process.env.GOOGLE_REDIRECT_URI.trim().replace("the-champions-club.netlify.app", "thechampionsclub.netlify.app");
+  }
+
+  if (process.env.URL) {
+    return `${process.env.URL.replace(/\/$/, "")}/api/v1/auth/google/callback`;
+  }
+
   return GOOGLE_REDIRECT_URI;
 }

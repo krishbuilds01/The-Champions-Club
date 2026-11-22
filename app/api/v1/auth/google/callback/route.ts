@@ -8,6 +8,8 @@ import {
 } from "@/lib/auth";
 
 // Google sends the browser back here. Handles both Member/User and Staff logins.
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const back = (path: string) => NextResponse.redirect(new URL(path, req.url));
   const jar = await cookies();

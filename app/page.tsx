@@ -126,8 +126,6 @@ export default function Home() {
                   </Link>
                 )}
                 <Link href="/trial" className="rounded-full border border-white/35 px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#163021]">Book a trial</Link>
-                <Link href="/courts" className="rounded-full border border-white/35 px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#163021]">Courts</Link>
-                <button onClick={() => scrollTo("membership")} className="rounded-full border border-white/35 px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#163021]">Membership</button>
               </div>
             </div>
             <div className="mt-16 flex flex-wrap gap-x-12 gap-y-5 border-t border-white/20 pt-6 text-[10px] uppercase tracking-[.18em] text-white/55 lg:absolute lg:bottom-20 lg:right-12 lg:mt-0 lg:w-auto">
@@ -182,105 +180,100 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="membership" className="bg-[#f2f0e8] py-24 sm:py-32">
-          <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
+        <section id="membership" className="bg-[#f2f0e8] py-10 sm:py-14 lg:py-16">
+          <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center">
               <p className="eyebrow">Membership Tiers &amp; Player Returns</p>
-              <h2 className="mt-4 font-display text-5xl font-bold uppercase leading-[.92] tracking-tight sm:text-7xl">
+              <h2 className="mt-2 font-display text-3xl font-bold uppercase leading-[.95] tracking-tight sm:text-5xl lg:text-6xl">
                 Make Champions<br /><span className="text-[#7c887e]">your home court.</span>
               </h2>
-              <p className="mt-6 text-sm sm:text-base leading-7 text-[#68746b]">
+              <p className="mt-2 text-xs sm:text-sm text-[#68746b] max-w-2xl mx-auto">
                 Priority court booking, exclusive member rates, and guaranteed player savings.
                 Explore the 1-month profits below—every plan pays for itself in just a few visits.
               </p>
             </div>
 
             {/* 3 Membership Cards */}
-            <div className="mt-16 grid gap-8 lg:grid-cols-3 items-stretch">
+            <div className="mt-8 grid gap-4 lg:gap-6 lg:grid-cols-3 items-stretch">
               {/* CARD 1: GOLD */}
-              <div className="relative flex flex-col justify-between rounded-3xl bg-[#163021] p-7 text-white shadow-xl sm:p-9 ring-2 ring-[#dfff45]">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#dfff45] px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-[#163021] shadow">
+              <div className="relative flex flex-col justify-between rounded-2xl bg-[#163021] p-5 sm:p-6 text-white shadow-xl ring-2 ring-[#dfff45]">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#dfff45] px-3 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#163021] shadow whitespace-nowrap">
                   ⭐ Most Popular · Max Savings
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-display text-3xl font-bold uppercase text-white">Gold Tier</h3>
-                      <p className="text-xs text-white/60 mt-1">For regular players &amp; active teams</p>
+                      <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white">Gold Tier</h3>
+                      <p className="text-[11px] text-white/60">For regular players &amp; active teams</p>
                     </div>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#dfff45]">
+                    <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#dfff45] shrink-0">
                       All-Access
                     </span>
                   </div>
 
-                  <div className="mt-6 border-b border-white/15 pb-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-display text-5xl font-bold text-[#dfff45]">₹1,500</span>
-                      <span className="text-sm font-semibold uppercase tracking-wider text-white/60">/ month</span>
+                  <div className="mt-3 border-b border-white/15 pb-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-display text-3xl sm:text-4xl font-bold text-[#dfff45]">₹1,500</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-white/60">/ month</span>
                     </div>
-                    <p className="mt-1 text-[11px] text-white/50">or ₹15,000 / year (save ₹3,000 yearly)</p>
+                    <p className="text-[10px] text-white/50">or ₹15,000 / year (save ₹3,000 yearly)</p>
                   </div>
 
                   {/* Hourly Rates & Benefits */}
-                  <div className="mt-6 space-y-3 text-xs">
-                    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
+                  <div className="mt-3 space-y-1 sm:space-y-1.5 text-[11px]">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
                       <span className="text-white/80">🎾 Tennis Court</span>
-                      <span className="font-bold text-[#dfff45]">₹300/hr <span className="font-normal text-white/40 line-through text-[10px]">₹500</span></span>
+                      <span className="font-bold text-[#dfff45]">₹300/hr <span className="font-normal text-white/40 line-through text-[9px]">₹500</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
                       <span className="text-white/80">🏏 Cricket Turf</span>
-                      <span className="font-bold text-[#dfff45]">₹500/hr <span className="font-normal text-white/40 line-through text-[10px]">₹800</span></span>
+                      <span className="font-bold text-[#dfff45]">₹500/hr <span className="font-normal text-white/40 line-through text-[9px]">₹800</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
                       <span className="text-white/80">☕ Clubhouse Bar &amp; Café</span>
                       <span className="font-bold text-white">20% OFF Everything</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
                       <span className="text-white/80">🛍️ Pro Shop &amp; Gear</span>
                       <span className="font-bold text-white">15% OFF Equipment</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
                       <span className="text-white/80">📅 Booking Window</span>
                       <span className="font-bold text-white">7 Days in Advance</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
                       <span className="text-white/80">⏱️ Daily Court Limit</span>
                       <span className="font-bold text-[#dfff45]">Up to 4 Slots (4 hrs / day)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
                       <span className="text-white/80">🎟️ Free Guest Passes</span>
                       <span className="font-bold text-[#dfff45]">2 Passes / Month</span>
                     </div>
                   </div>
 
                   {/* 1-Month Profit Box */}
-                  <div className="mt-7 rounded-2xl bg-[#dfff45]/10 border border-[#dfff45]/25 p-4 text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#dfff45]">
-                      📊 1-Month Member Profits:
+                  <div className="mt-3 rounded-xl bg-[#dfff45]/10 border border-[#dfff45]/25 p-2.5 text-left">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#dfff45]">1-Mo Net Profit</span>
+                      <span className="text-xs font-bold text-white">+₹2,100 <span className="text-[#dfff45] font-normal text-[10px]">(Save ₹3,600)</span></span>
+                    </div>
+                    <p className="mt-1 text-[10px] text-white/70 leading-tight">
+                      ✓ 4 Tennis + 2 Turf games (₹1.4k) + 2 passes (₹1k) + 20% shop/café
                     </p>
-                    <p className="mt-1 text-sm font-bold text-white">
-                      Save ₹3,600/mo <span className="text-[#dfff45]">(Net Profit +₹2,100)</span>
-                    </p>
-                    <ul className="mt-2.5 space-y-1.5 text-[11px] text-white/70">
-                      <li className="flex items-center gap-2">✓ 4 Tennis matches: Save ₹800</li>
-                      <li className="flex items-center gap-2">✓ 2 Cricket games: Save ₹600</li>
-                      <li className="flex items-center gap-2">✓ 2 Free guest passes: Worth ₹1,000</li>
-                      <li className="flex items-center gap-2">✓ Café &amp; Shop discount: Save ~₹1,200</li>
-                    </ul>
                   </div>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-4">
                   {member?.plan?.code === "gold" ? (
-                    <div className="w-full rounded-full bg-white/20 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-white">
+                    <div className="w-full rounded-full bg-white/20 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white">
                       Current Plan ✓
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSelectPlan("gold")}
                       disabled={activating === "gold"}
-                      className="w-full rounded-full bg-[#dfff45] py-3.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021] transition hover:bg-white"
+                      className="w-full rounded-full bg-[#dfff45] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021] transition hover:bg-white"
                     >
                       {activating === "gold" ? "Activating..." : member ? "Activate Gold (₹1,500/mo)" : "Join Gold Membership"}
                     </button>
@@ -289,85 +282,80 @@ export default function Home() {
               </div>
 
               {/* CARD 2: SILVER */}
-              <div className="flex flex-col justify-between rounded-3xl bg-white p-7 text-[#163021] border border-[#163021]/15 shadow-sm sm:p-9">
+              <div className="flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 text-[#163021] border border-[#163021]/15 shadow-sm">
                 <div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-display text-3xl font-bold uppercase text-[#163021]">Silver Tier</h3>
-                      <p className="text-xs text-[#617065] mt-1">For regular weekly players</p>
+                      <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-[#163021]">Silver Tier</h3>
+                      <p className="text-[11px] text-[#617065]">For regular weekly players</p>
                     </div>
-                    <span className="rounded-full bg-[#163021]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#163021]">
+                    <span className="rounded-full bg-[#163021]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#163021] shrink-0">
                       Club Favourite
                     </span>
                   </div>
 
-                  <div className="mt-6 border-b border-[#163021]/10 pb-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-display text-5xl font-bold text-[#163021]">₹1,000</span>
-                      <span className="text-sm font-semibold uppercase tracking-wider text-[#617065]">/ month</span>
+                  <div className="mt-3 border-b border-[#163021]/10 pb-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-display text-3xl sm:text-4xl font-bold text-[#163021]">₹1,000</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#617065]">/ month</span>
                     </div>
-                    <p className="mt-1 text-[11px] text-[#849087]">or ₹10,000 / year (save ₹2,000 yearly)</p>
+                    <p className="text-[10px] text-[#849087]">or ₹10,000 / year (save ₹2,000 yearly)</p>
                   </div>
 
                   {/* Hourly Rates & Benefits */}
-                  <div className="mt-6 space-y-3 text-xs">
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                  <div className="mt-3 space-y-1 sm:space-y-1.5 text-[11px]">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🎾 Tennis Court</span>
-                      <span className="font-bold text-[#163021]">₹400/hr <span className="font-normal text-[#849087] line-through text-[10px]">₹500</span></span>
+                      <span className="font-bold text-[#163021]">₹400/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹500</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🏏 Cricket Turf</span>
-                      <span className="font-bold text-[#163021]">₹650/hr <span className="font-normal text-[#849087] line-through text-[10px]">₹800</span></span>
+                      <span className="font-bold text-[#163021]">₹650/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹800</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">☕ Clubhouse Bar &amp; Café</span>
                       <span className="font-bold text-[#163021]">10% OFF Everything</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🛍️ Pro Shop &amp; Gear</span>
                       <span className="font-bold text-[#163021]">10% OFF Equipment</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">📅 Booking Window</span>
                       <span className="font-bold text-[#163021]">5 Days in Advance</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">⏱️ Daily Court Limit</span>
                       <span className="font-bold text-[#163021]">Up to 2 Slots (2 hrs / day)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🎟️ Free Guest Passes</span>
                       <span className="font-bold text-[#163021]">1 Pass / Month</span>
                     </div>
                   </div>
 
                   {/* 1-Month Profit Box */}
-                  <div className="mt-7 rounded-2xl bg-[#163021]/5 border border-[#163021]/10 p-4 text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#163021]">
-                      📊 1-Month Member Profits:
+                  <div className="mt-3 rounded-xl bg-[#163021]/5 border border-[#163021]/10 p-2.5 text-left">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#163021]">1-Mo Net Profit</span>
+                      <span className="text-xs font-bold text-[#163021]">+₹650 <span className="text-[#2e7d32] font-normal text-[10px]">(Save ₹1,650)</span></span>
+                    </div>
+                    <p className="mt-1 text-[10px] text-[#617065] leading-tight">
+                      ✓ 4 Tennis (₹400) + 1 Turf (₹150) + 1 guest pass (₹500) + 10% café/shop
                     </p>
-                    <p className="mt-1 text-sm font-bold text-[#163021]">
-                      Save ₹1,650/mo <span className="text-[#2e7d32]">(Net Profit +₹650)</span>
-                    </p>
-                    <ul className="mt-2.5 space-y-1.5 text-[11px] text-[#617065]">
-                      <li className="flex items-center gap-2">✓ 4 Tennis matches: Save ₹400</li>
-                      <li className="flex items-center gap-2">✓ 1 Cricket match: Save ₹150</li>
-                      <li className="flex items-center gap-2">✓ 1 Free guest pass: Worth ₹500</li>
-                      <li className="flex items-center gap-2">✓ Café &amp; Shop discount: Save ~₹600</li>
-                    </ul>
                   </div>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-4">
                   {member?.plan?.code === "silver" ? (
-                    <div className="w-full rounded-full bg-[#163021]/15 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021]">
+                    <div className="w-full rounded-full bg-[#163021]/15 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021]">
                       Current Plan ✓
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSelectPlan("silver")}
                       disabled={activating === "silver"}
-                      className="w-full rounded-full bg-[#163021] py-3.5 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#dfff45] hover:text-[#163021]"
+                      className="w-full rounded-full bg-[#163021] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#dfff45] hover:text-[#163021]"
                     >
                       {activating === "silver" ? "Activating..." : member ? "Activate Silver (₹1,000/mo)" : "Join Silver Membership"}
                     </button>
@@ -376,84 +364,80 @@ export default function Home() {
               </div>
 
               {/* CARD 3: JUNIOR */}
-              <div className="flex flex-col justify-between rounded-3xl bg-white p-7 text-[#163021] border border-[#163021]/15 shadow-sm sm:p-9">
+              <div className="flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 text-[#163021] border border-[#163021]/15 shadow-sm">
                 <div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-display text-3xl font-bold uppercase text-[#163021]">Junior Tier</h3>
-                      <p className="text-xs text-[#617065] mt-1">Under 18, Students &amp; Youth</p>
+                      <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-[#163021]">Junior Tier</h3>
+                      <p className="text-[11px] text-[#617065]">Under 18, Students &amp; Youth</p>
                     </div>
-                    <span className="rounded-full bg-[#163021]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#163021]">
+                    <span className="rounded-full bg-[#163021]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#163021] shrink-0">
                       Youth 50% Off
                     </span>
                   </div>
 
-                  <div className="mt-6 border-b border-[#163021]/10 pb-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-display text-5xl font-bold text-[#163021]">₹600</span>
-                      <span className="text-sm font-semibold uppercase tracking-wider text-[#617065]">/ month</span>
+                  <div className="mt-3 border-b border-[#163021]/10 pb-3">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-display text-3xl sm:text-4xl font-bold text-[#163021]">₹600</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#617065]">/ month</span>
                     </div>
-                    <p className="mt-1 text-[11px] text-[#849087]">or ₹6,000 / year (save ₹1,200 yearly)</p>
+                    <p className="text-[10px] text-[#849087]">or ₹6,000 / year (save ₹1,200 yearly)</p>
                   </div>
 
                   {/* Hourly Rates & Benefits */}
-                  <div className="mt-6 space-y-3 text-xs">
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                  <div className="mt-3 space-y-1 sm:space-y-1.5 text-[11px]">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🎾 Tennis Court</span>
-                      <span className="font-bold text-[#2e7d32]">₹250/hr <span className="font-normal text-[#849087] line-through text-[10px]">₹500</span> (50% Off)</span>
+                      <span className="font-bold text-[#2e7d32]">₹250/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹500</span> (50% Off)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🏏 Cricket Turf</span>
-                      <span className="font-bold text-[#2e7d32]">₹400/hr <span className="font-normal text-[#849087] line-through text-[10px]">₹800</span> (50% Off)</span>
+                      <span className="font-bold text-[#2e7d32]">₹400/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹800</span> (50% Off)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🛍️ Pro Shop Gear</span>
                       <span className="font-bold text-[#163021]">5% OFF Training Gear</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">🏆 Skills Workshop</span>
                       <span className="font-bold text-[#163021]">Free Monthly Clinic</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">📅 Booking Window</span>
                       <span className="font-bold text-[#163021]">3 Days in Advance</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">⏱️ Daily Court Limit</span>
                       <span className="font-bold text-[#2e7d32]">1 Slot (1 hr / day)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-[#f7f6f0] px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
                       <span className="text-[#617065]">⏰ Afternoon Priority</span>
                       <span className="font-bold text-[#163021]">2 PM – 6 PM Slots</span>
                     </div>
                   </div>
 
                   {/* 1-Month Profit Box */}
-                  <div className="mt-7 rounded-2xl bg-[#163021]/5 border border-[#163021]/10 p-4 text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#163021]">
-                      📊 1-Month Member Profits:
+                  <div className="mt-3 rounded-xl bg-[#163021]/5 border border-[#163021]/10 p-2.5 text-left">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#163021]">1-Mo Net Profit</span>
+                      <span className="text-xs font-bold text-[#163021]">+₹1,900 <span className="text-[#2e7d32] font-normal text-[10px]">(Save ₹2,500)</span></span>
+                    </div>
+                    <p className="mt-1 text-[10px] text-[#617065] leading-tight">
+                      ✓ 6 Tennis practice hrs (₹1.5k) + 1 turf game (₹400) + monthly clinic (₹600)
                     </p>
-                    <p className="mt-1 text-sm font-bold text-[#163021]">
-                      Save ₹2,500/mo <span className="text-[#2e7d32]">(Net Profit +₹1,900)</span>
-                    </p>
-                    <ul className="mt-2.5 space-y-1.5 text-[11px] text-[#617065]">
-                      <li className="flex items-center gap-2">✓ 6 Tennis practice hrs: Save ₹1,500</li>
-                      <li className="flex items-center gap-2">✓ 1 Cricket turf game: Save ₹400</li>
-                      <li className="flex items-center gap-2">✓ Free monthly skills clinic: Worth ₹600</li>
-                    </ul>
                   </div>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-4">
                   {member?.plan?.code === "junior" ? (
-                    <div className="w-full rounded-full bg-[#163021]/15 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021]">
+                    <div className="w-full rounded-full bg-[#163021]/15 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021]">
                       Current Plan ✓
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSelectPlan("junior")}
                       disabled={activating === "junior"}
-                      className="w-full rounded-full bg-[#163021] py-3.5 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#dfff45] hover:text-[#163021]"
+                      className="w-full rounded-full bg-[#163021] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#dfff45] hover:text-[#163021]"
                     >
                       {activating === "junior" ? "Activating..." : member ? "Activate Junior (₹600/mo)" : "Join Junior Membership"}
                     </button>
@@ -463,7 +447,7 @@ export default function Home() {
             </div>
 
             {/* Custom / Corporate Enquiry Bar */}
-            <div className="mt-20 rounded-3xl border border-[#163021]/15 bg-white p-8 sm:p-12 text-center max-w-3xl mx-auto shadow-sm">
+            <div className="mt-12 rounded-2xl border border-[#163021]/15 bg-white p-6 sm:p-8 text-center max-w-3xl mx-auto shadow-sm">
               <p className="eyebrow">Corporate &amp; Family Plans</p>
               <h3 className="mt-3 font-display text-3xl font-bold uppercase text-[#163021] sm:text-4xl">
                 Need a Custom Club Package?
