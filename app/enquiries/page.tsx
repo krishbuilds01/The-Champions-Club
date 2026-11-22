@@ -6,7 +6,8 @@ import { Loading, ErrorBox, Empty } from "@/components/States";
 import type { EnquiryDTO } from "@/lib/types";
 import { inr } from "@/lib/format";
 
-const statuses: EnquiryDTO["status"][] = ["NEW", "CONTACTED", "QUOTED", "CONVERTED", "LOST"];
+// CONVERTED is not offered: the server rejects it — conversion happens via "Make member".
+const statuses: EnquiryDTO["status"][] = ["NEW", "CONTACTED", "QUOTED", "LOST"];
 
 export default function Enquiries() {
   const enquiries = useApi(() => api.enquiries());
@@ -17,8 +18,16 @@ export default function Enquiries() {
   const [quoteAmt, setQuoteAmt] = useState<Record<number, string>>({});
   const [quoteNotes, setQuoteNotes] = useState<Record<number, string>>({});
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | EnquiryDTO["status"]>("all");
+  const [search, setSearch] = useState("");
 
   const list = enquiries.data ?? [];
+  const sq = search.trim().toLowerCase();
+  const shown = list.filter(
+    (e) =>
+      (statusFilter === "all" || e.status === statusFilter) &&
+      (!sq || e.name.toLowerCase().includes(sq) || e.contact.toLowerCase().includes(sq) || e.message.toLowerCase().includes(sq)),
+  );
 
   async function patch(id: number, patch: { status?: EnquiryDTO["status"]; note?: string }) {
     setBusyId(id);
@@ -34,9 +43,12 @@ export default function Enquiries() {
   }
 
   async function quote(e: EnquiryDTO) {
-    const planCode = planFor[e.id] ?? plans.data?.[0]?.code;
+    const planCode = planFor[e.id];
     const amount = Number(quoteAmt[e.id] ?? e.quoteAmount ?? "");
-    if (!planCode) return;
+    if (!planCode) {
+      setMsg({ ok: false, text: `Pick a plan for ${e.name} first — the quote amount comes from the plan.` });
+      return;
+    }
     if (!Number.isInteger(amount) || amount <= 0) {
       setMsg({ ok: false, text: `Add the quote amount for ${e.name} first.` });
       return;
@@ -45,7 +57,7 @@ export default function Enquiries() {
     setMsg(null);
     try {
       const q = await api.quoteEnquiry(e.id, { planCode, amount, note: (quoteNotes[e.id] ?? e.quoteNote).trim() });
-      setMsg({ ok: true, text: `Quote recorded as sent to ${e.name} — ${q.quotePlan} at ${inr(q.quoteAmount ?? amount)}.` });
+      setMsg({ ok: true, text: `Quote recorded for ${e.name} — ${q.quotePlan} at ${inr(q.quoteAmount ?? amount)}.` });
       void enquiries.reload();
     } catch (err) {
       setMsg({ ok: false, text: err instanceof ApiClientError ? err.message : "Quote failed. Try again." });
@@ -55,8 +67,11 @@ export default function Enquiries() {
   }
 
   async function convert(e: EnquiryDTO) {
-    const planCode = planFor[e.id] ?? plans.data?.[0]?.code;
-    if (!planCode) return;
+    const planCode = planFor[e.id];
+    if (!planCode) {
+      setMsg({ ok: false, text: `Pick a plan for ${e.name} first.` });
+      return;
+    }
     setBusyId(e.id);
     setMsg(null);
     try {
@@ -88,10 +103,21 @@ export default function Enquiries() {
         <>
           {msg && <div className={`notice ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</div>}
           <p className="count-line" style={{ paddingBottom: 2 }}>
-            <b>{list.filter((e) => e.status === "NEW").length}</b> new · {list.length} total
+            <b>{list.filter((e) => e.status === "NEW").length}</b> new · {shown.length} of {list.length} shown
           </p>
+          <div className="shop-toolbar" style={{ marginTop: 12 }}>
+            <div className="shop-cats" role="group" aria-label="Filter by status">
+              {(["all", "NEW", "CONTACTED", "QUOTED", "LOST"] as const).map((s) => (
+                <button key={s} aria-pressed={statusFilter === s} onClick={() => setStatusFilter(s)}>
+                  {s === "all" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </div>
+            <input className="shop-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, contact or message…" aria-label="Search enquiries" />
+          </div>
+          {shown.length === 0 && <Empty>No enquiries match that filter or search.</Empty>}
           <div className="rows">
-            {list.map((e) => (
+            {shown.map((e) => (
               <div className={`row-item${e.status === "NEW" ? " row-new" : ""}${e.status === "LOST" ? " row-off" : ""}`} key={e.id} style={{ alignItems: "start" }}>
                 <div className="row-main">
                   <p className="row-name">
@@ -103,7 +129,7 @@ export default function Enquiries() {
                   {e.message && <p style={{ marginTop: 4 }}>{e.message}</p>}
                   {e.quoteAmount !== null && (
                     <p style={{ marginTop: 6 }}>
-                      <span className="tag">Quote sent</span>{" "}
+                      <span className="tag">Quote recorded</span>{" "}
                       <strong>{e.quotePlan} · {inr(e.quoteAmount)}</strong>
                       {e.quotedAt ? <span className="muted"> · {new Date(e.quotedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span> : null}
                       {e.quoteNote ? <span className="muted"> — {e.quoteNote}</span> : null}
@@ -125,11 +151,18 @@ export default function Enquiries() {
                         <select
                           style={{ width: "auto", minWidth: 120 }}
                           aria-label={`Plan for ${e.name}`}
-                          value={planFor[e.id] ?? plans.data?.[0]?.code ?? ""}
-                          onChange={(ev) => setPlanFor((p) => ({ ...p, [e.id]: ev.target.value }))}
+                          value={planFor[e.id] ?? ""}
+                          onChange={(ev) => {
+                            const code = ev.target.value;
+                            setPlanFor((p) => ({ ...p, [e.id]: code }));
+                            // The quote amount comes from the plan picked.
+                            const plan = plans.data?.find((p) => p.code === code);
+                            if (plan) setQuoteAmt((q) => ({ ...q, [e.id]: String(plan.tennisPrice) }));
+                          }}
                         >
+                          <option value="" disabled>Pick a plan</option>
                           {(plans.data ?? []).map((p) => (
-                            <option key={p.code} value={p.code}>{p.name}</option>
+                            <option key={p.code} value={p.code}>{p.name} — ₹{p.tennisPrice}</option>
                           ))}
                         </select>
                         <button className="btn btn-ink" disabled={busyId === e.id} onClick={() => convert(e)}>
@@ -157,7 +190,7 @@ export default function Enquiries() {
                         style={{ minWidth: 200 }}
                       />
                       <button className="btn btn-quiet" disabled={busyId === e.id} onClick={() => quote(e)}>
-                        {e.quoteAmount !== null ? "Update quote" : "Send quote"}
+                        {e.quoteAmount !== null ? "Update quote" : "Record quote"}
                       </button>
                     </div>
                   )}

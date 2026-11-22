@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
-import { getGoogleRedirectUri, setSessionCookie, tokenForStaff } from "@/lib/auth";
+import { getGoogleRedirectUri, safeNextPath, setSessionCookie, tokenForStaff } from "@/lib/auth";
 
 // Google sends the browser back here. Only Google accounts whose email
 // belongs to a staff record get a session; everyone else is turned away.
@@ -48,6 +48,6 @@ export async function GET(req: NextRequest) {
   if (!staff) return back("/login?error=notstaff");
   await setSessionCookie(await tokenForStaff(staff));
 
-  const destination = next && next.startsWith("/") && next !== "/login" ? next : "/dashboard";
+  const destination = safeNextPath(next) === "/login" ? "/dashboard" : safeNextPath(next);
   return back(destination);
 }

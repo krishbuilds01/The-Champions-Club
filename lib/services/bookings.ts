@@ -65,14 +65,20 @@ export async function listSchedule(date: string): Promise<BookingDTO[]> {
   return rows.map((b) => ({ ...toBookingDTO(b), phone: "" }));
 }
 
-export async function listBookings(date?: string): Promise<BookingDTO[]> {
-  const where: Prisma.BookingWhereInput = date
-    ? { date: new Date(`${date}T00:00:00.000Z`) }
-    : { date: { gte: new Date(`${todayISO()}T00:00:00.000Z`) } };
+export async function listBookings(date?: string, state?: string): Promise<BookingDTO[]> {
+  if (state !== undefined && state !== "BOOKED" && state !== "CANCELLED")
+    throw badRequest("state must be BOOKED or CANCELLED");
+  const where: Prisma.BookingWhereInput = {
+    ...(date
+      ? { date: new Date(`${date}T00:00:00.000Z`) }
+      : { date: { gte: new Date(`${todayISO()}T00:00:00.000Z`) } }),
+    ...(state ? { state } : {}),
+  };
   const rows = await db.booking.findMany({
     where,
     include: { court: true },
     orderBy: [{ date: "asc" }, { start: "asc" }],
+    take: 100,
   });
   return rows.map(toBookingDTO);
 }
@@ -124,6 +130,18 @@ export async function createBooking(input: {
     if (sameDay.some((b) => overlaps(b.start, input.start)))
       throw conflict("That court is already booked at that time");
 
+    if (input.type === "TRIAL") {
+      // Trials are free, so one phone number gets one trial a day —
+      // otherwise a single number could block a court all day.
+      const digits = input.phone.replace(/\D/g, "");
+      const trials = await tx.booking.findMany({
+        where: { date: day, state: "BOOKED", type: "TRIAL" },
+        select: { phone: true },
+      });
+      if (trials.some((t) => t.phone.replace(/\D/g, "") === digits))
+        throw conflict("One free trial per phone number per day");
+    }
+
     if (input.type === "REGULAR") {
       const mine = await tx.booking.count({
         where: {
@@ -169,6 +187,11 @@ export async function cancelBooking(id: number): Promise<BookingDTO> {
   const row = await db.booking.findUnique({ where: { id }, include: { court: true } });
   if (!row) throw notFound("No such booking");
   if (row.state === "CANCELLED") throw conflict("That booking is already cancelled");
+  // Same rule as booking: once the slot has started, it cannot be
+  // cancelled (no refund / no-show handling exists to fall back on).
+  const dayISO = row.date.toISOString().slice(0, 10);
+  if (dayISO < todayISO() || (dayISO === todayISO() && row.start <= istMinutesNow()))
+    throw conflict("That slot has already started");
   const updated = await db.booking.update({
     where: { id },
     data: { state: "CANCELLED" },

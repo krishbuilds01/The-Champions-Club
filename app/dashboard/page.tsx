@@ -32,6 +32,33 @@ export default function Dashboard() {
       ]
     : [];
 
+  // Download the numbers on screen as a CSV file (client-side, no endpoint).
+  function exportCsv() {
+    if (!d || !split) return;
+    const lines: string[][] = [];
+    lines.push(["The Champions Club — dashboard", `Period: ${period}`, `Date: ${today}`]);
+    lines.push([]);
+    lines.push(["Figures", "Amount (Rs)"]);
+    lines.push(["Courts", String(split.courts)]);
+    lines.push(["Shop", String(split.shop)]);
+    lines.push(["Bar", String(split.bar)]);
+    lines.push(["Total", String(split.total)]);
+    lines.push([]);
+    lines.push(["Taken today by method", "Amount (Rs)"]);
+    d.byMethod.forEach((m) => lines.push([methodLabel[m.method], String(m.amount)]));
+    lines.push([]);
+    lines.push(["Low stock", "Stock left"]);
+    d.lowStock.forEach((p) => lines.push([p.name, String(p.stock)]));
+    const csv = lines.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `champions-dashboard-${today}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className="wrap page">
       <div className="page-head">
@@ -46,10 +73,13 @@ export default function Dashboard() {
         <ErrorBox message={dash.error} onRetry={dash.reload} />
       ) : (
         <>
-          <div className="seg" role="group" aria-label="Period" style={{ marginBottom: 18 }}>
-            {periods.map((p) => (
-              <button key={p.code} aria-pressed={period === p.code} onClick={() => setPeriod(p.code)}>{p.label}</button>
-            ))}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
+            <div className="seg" role="group" aria-label="Period">
+              {periods.map((p) => (
+                <button key={p.code} aria-pressed={period === p.code} onClick={() => setPeriod(p.code)}>{p.label}</button>
+              ))}
+            </div>
+            <button className="btn btn-quiet" onClick={exportCsv}>Export CSV</button>
           </div>
 
           <div className="figures">
@@ -61,7 +91,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {period === "today" && d!.byMethod.length > 0 && (
+          {d!.byMethod.length > 0 && (
             <p className="pay-strip">
               Taken today by{" "}
               {d!.byMethod.map((m, i) => (
@@ -81,10 +111,10 @@ export default function Dashboard() {
             </div>
           )}
 
-          {period === "today" && d!.expiring.length > 0 && (
+          {d!.expiring.length > 0 && (
             <section className="block">
               <div className="sec-head">
-                <h2>Expiring in the next 14 days</h2>
+                <h2>Expiring in the next 14 days (today)</h2>
                 <Link className="text-link" href="/members">All members</Link>
               </div>
               <div className="ledger-wrap">

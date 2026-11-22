@@ -24,6 +24,7 @@ export default function Chrome({ children }: { children: React.ReactNode }) {
   // The footer's staff column only lists pages the signed-in role can
   // actually open; visitors do not see it at all.
   const desk = staff && (staff.role === "OWNER" || staff.role === "FRONT_DESK" || staff.role === "STAFF");
+  const barShop = staff && (staff.role === "BAR" || staff.role === "SHOP");
   return (
     <div className="shell">
       <Nav />
@@ -33,7 +34,7 @@ export default function Chrome({ children }: { children: React.ReactNode }) {
         <div className="wrap footer-in">
           <div>
             <p className="footer-brand">The Champions Club</p>
-            <p className="muted">Courts open 6 AM to 10 PM, every day.<br />Front desk: +91 98765 43210</p>
+            <p className="muted">Courts open 6 AM to 10 PM, every day.<br />Front desk: <a href="mailto:frontdesk@champions.club">frontdesk@champions.club</a></p>
           </div>
           <nav>
             <Link href="/courts">Courts</Link>
@@ -50,6 +51,12 @@ export default function Chrome({ children }: { children: React.ReactNode }) {
               <Link href="/bookings">Bookings</Link>
               <Link href="/members">Members</Link>
               <Link href="/enquiries">Enquiries</Link>
+            </nav>
+          ) : barShop ? (
+            <nav>
+              {staff.role === "BAR" && <Link href="/bar">Bar &amp; Café</Link>}
+              {staff.role === "SHOP" && <Link href="/shop">Shop</Link>}
+              <Link href="/shifts">Staff rota</Link>
             </nav>
           ) : (
             <nav>

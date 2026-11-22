@@ -27,7 +27,14 @@ export const istDayStart = (dateISO: string) => new Date(`${dateISO}T00:00:00+05
 export const addDaysISO = (dateISO: string, days: number) =>
   new Date(Date.parse(dateISO) + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-export const isISODate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
+export const isISODate = (s: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  // Date.parse rolls impossible dates forward (2026-02-30 becomes
+  // 2026-03-02), so build the date and check the parts round-trip.
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+};
 
 // Court hours: first start 6:00 AM, last start 9:00 PM, one hour a booking.
 export const OPEN_MIN = 360;

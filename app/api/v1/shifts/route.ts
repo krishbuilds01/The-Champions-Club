@@ -1,4 +1,5 @@
 import { handle, body } from "@/lib/http";
+import { badRequest } from "@/lib/errors";
 import { requireRole } from "@/lib/auth";
 import { isISODate } from "@/lib/format";
 import { parse, shiftInput } from "@/lib/validate";
@@ -10,7 +11,8 @@ export const GET = (req: Request) =>
     const url = new URL(req.url);
     const from = url.searchParams.get("from") ?? "";
     const to = url.searchParams.get("to") ?? "";
-    if (!isISODate(from) || !isISODate(to)) return listShifts("0000-01-01", "9999-12-31");
+    if (!isISODate(from) || !isISODate(to)) throw badRequest("from and to must be YYYY-MM-DD dates");
+    if (from > to) throw badRequest("from must not be after to");
     return listShifts(from, to);
   });
 

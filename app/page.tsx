@@ -24,7 +24,7 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
 }
 
 const facilities = [
-  { number: "01", title: "Courts", description: "Six championship padel and tennis courts, thoughtfully designed for every level of play.", icon: "court" as IconName, meta: "6 premium courts", href: "/courts" },
+  { number: "01", title: "Courts", description: "Three championship courts — two tennis, one cricket — thoughtfully designed for every level of play.", icon: "court" as IconName, meta: "3 courts · Tennis & cricket", href: "/courts" },
   { number: "02", title: "Clubhouse", description: "A relaxed bar and kitchen serving all-day plates, considered drinks, and post-match rituals.", icon: "cup" as IconName, meta: "Open until late", href: "/bar" },
   { number: "03", title: "Pro shop", description: "Technical essentials, fresh club apparel, and expert advice—all right where you play.", icon: "bag" as IconName, meta: "Curated for players", href: "/shop" },
 ];
@@ -64,7 +64,8 @@ export default function Home() {
           <div className="border-t border-white/10 bg-[#132b1d] px-5 py-6 lg:hidden">
             {[["Courts", "/courts"], ["Shop", "/shop"], ["Bar & Café", "/bar"], ["Book a trial", "/trial"], ["Membership", "/#membership"]].map(([item, href]) => <Link key={item} href={href} onClick={() => setMenuOpen(false)} className="block w-full border-b border-white/10 py-4 text-left font-display text-xl font-bold uppercase">{item}</Link>)}
             <Link href="/trial" onClick={() => setMenuOpen(false)} className="mt-6 block w-full rounded-full bg-[#dfff45] py-4 text-center text-xs font-bold uppercase tracking-wider text-[#173020]">Book a trial</Link>
-            <Link href="/login" onClick={() => setMenuOpen(false)} className="mt-3 block w-full rounded-full bg-white py-4 text-center text-xs font-bold uppercase tracking-wider text-[#173020]">Sign in</Link>
+            <Link href="/member/login" onClick={() => setMenuOpen(false)} className="mt-3 block w-full rounded-full bg-white py-4 text-center text-xs font-bold uppercase tracking-wider text-[#173020]">Member sign in</Link>
+            <Link href="/login" onClick={() => setMenuOpen(false)} className="mt-3 block w-full rounded-full bg-white py-4 text-center text-xs font-bold uppercase tracking-wider text-[#173020]">Staff sign in</Link>
           </div>
         )}
       </header>
@@ -72,11 +73,11 @@ export default function Home() {
       <main>
         <section id="home" className="relative flex min-h-[760px] items-end overflow-hidden bg-[#10251a] text-white lg:min-h-screen">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/hero.jpg" alt="Padel player on court at Champions Club" className="absolute inset-0 h-full w-full object-cover object-[62%_center]" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,28,17,.94)_0%,rgba(9,30,18,.74)_35%,rgba(9,29,18,.1)_70%),linear-gradient(0deg,rgba(7,23,14,.72)_0%,transparent_45%)]" />
-          <div className="relative mx-auto w-full max-w-[1440px] px-5 pb-16 pt-36 sm:px-8 lg:px-12 lg:pb-20">
-            <div className="max-w-[720px]">
-              <div className="mb-7 flex items-center gap-3"><span className="h-px w-10 bg-[#dfff45]" /><span className="text-[10px] font-bold uppercase tracking-[.28em] text-[#dfff45]">Courts · Kitchen · Community</span></div>
+          <img src="/hero.jpg" alt="Tennis player on court at Champions Club" className="absolute inset-0 h-full w-full object-cover object-center" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(7,23,14,.84)_0%,rgba(8,28,17,.36)_48%,rgba(8,28,17,.52)_100%)]" />
+          <div className="relative mx-auto w-full max-w-[1440px] px-5 py-36 sm:px-8 lg:px-12 lg:py-28">
+            <div className="mx-auto flex max-w-[880px] flex-col items-center text-center">
+              <div className="mb-7 flex items-center justify-center gap-3"><span className="h-px w-10 bg-[#dfff45]" /><span className="text-[10px] font-bold uppercase tracking-[.28em] text-[#dfff45]">Courts · Kitchen · Community</span><span className="h-px w-10 bg-[#dfff45]" /></div>
               <h1 className="font-display text-[64px] font-bold uppercase leading-[.84] tracking-[-.035em] sm:text-[86px] lg:text-[118px]">Play hard.<br /><span className="text-[#dfff45]">Stay longer.</span></h1>
               <p className="mt-8 max-w-lg text-sm leading-7 text-white/70 sm:text-base">More than a place to play. Champions is your home court, your local, and your community—all under one roof.</p>
               <div className="mt-9 flex flex-wrap gap-3">
@@ -84,7 +85,11 @@ export default function Home() {
                 <Link href="/courts" className="rounded-full border border-white/35 px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#163021]">Courts</Link>
                 <Link href="/#membership" className="rounded-full border border-white/35 px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#163021]">Membership</Link>
               </div>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-white/70">Members:</span>
+                <Link href="/member/login" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#163021] shadow-md transition hover:bg-[#dfff45]">
+                  Member sign in <Icon name="arrow" className="h-3.5 w-3.5" />
+                </Link>
                 <span className="text-xs font-semibold uppercase tracking-wider text-white/70">Club staff:</span>
                 <Link href="/login" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#163021] shadow-md transition hover:bg-[#dfff45]">
                   Sign in <Icon name="arrow" className="h-3.5 w-3.5" />
@@ -174,12 +179,11 @@ export default function Home() {
             <Link href="/bar" className="transition hover:text-white">Bar &amp; Café</Link>
             <Link href="/trial" className="transition hover:text-white">Book a trial</Link>
             <Link href="/#membership" className="transition hover:text-white">Membership</Link>
-            <button onClick={() => setNotice("Events calendar coming soon")}>Events</button>
-            <button onClick={() => setNotice("Contact details: frontdesk@champions.club")}>Contact</button>
+            <a href="mailto:frontdesk@champions.club" className="transition hover:text-white">Contact</a>
             <Icon name="instagram" className="h-4 w-4 text-white" />
           </div>
         </div>
-        <div className="mx-auto mt-7 flex max-w-[1280px] flex-col justify-between gap-3 text-[9px] uppercase tracking-[.15em] text-white/30 sm:flex-row"><span>© 2025 Champions Club</span><span>Play · Eat · Belong</span></div>
+        <div className="mx-auto mt-7 flex max-w-[1280px] flex-col items-center gap-3 text-center text-[9px] uppercase tracking-[.15em] text-white/30 sm:flex-row sm:justify-center sm:gap-10"><span>© 2026 Champions Club</span><span>Play · Eat · Belong</span></div>
       </footer>
 
       {notice && <div className="make-toast fixed bottom-5 right-5 z-50 rounded-full bg-white px-5 py-3 text-xs font-bold text-[#173021] shadow-2xl">{notice}</div>}

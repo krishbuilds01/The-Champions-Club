@@ -23,7 +23,7 @@ export default async function MemberHome() {
       <MemberBar name={m.name} plan={m.plan} />
 
       <section className="panel panel-main" aria-label="My plan">
-        <div className="figures" style={{ marginTop: 0, gridTemplateColumns: "repeat(3, 1fr)" }}>
+        <div className="figures" style={{ marginTop: 0 }}>
           <div className="figure">
             <div className="f-label">{m.plan} plan</div>
             <div className="f-value">{m.state === "expired" ? "Expired" : m.state === "expiring" ? "Expiring soon" : "Active"}</div>
@@ -62,7 +62,7 @@ export default async function MemberHome() {
                     <td>{b.date}</td>
                     <td>{fmtTime(b.start)}</td>
                     <td>{b.court}</td>
-                    <td className="r">{b.price === 0 ? "Free" : inr(b.price)}</td>
+                    <td className="r">{b.price === 0 ? (b.type === "TRIAL" ? "Free trial" : "Covered by plan") : inr(b.price)}</td>
                     <td><span className={`status ${b.state === "BOOKED" ? "booked" : "cancelled"}`}>{b.state === "BOOKED" ? "Booked" : "Cancelled"}</span></td>
                   </tr>
                 ))}

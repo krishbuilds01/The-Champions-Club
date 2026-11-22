@@ -1,16 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api, ApiClientError } from "@/lib/api";
 
 // Staff sign-in: email and password, or Google for club accounts.
-// Members have their own sign-in (linked under the card). The demo
-// buttons sign in as each role's demo account in one tap.
+// Members have their own sign-in (linked under the card).
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [googleHref, setGoogleHref] = useState("/api/v1/auth/google");
+
+  // Only a same-site relative path is a safe place to land after
+  // sign-in: it must start with "/" but not "//" (protocol-relative)
+  // and must not contain "://".
+  const safeNext = (n: string | null) =>
+    n && n.startsWith("/") && !n.startsWith("//") && !n.includes("://") ? n : null;
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
@@ -19,17 +25,24 @@ export default function Login() {
     else if (q.get("error") === "gstate") setErr("Google session expired. Try signing in again.");
     else if (q.get("error") === "ginfo" || q.get("error") === "gemail") setErr("Could not retrieve verified email from Google.");
     else if (q.get("error") === "google") setErr("Google sign-in did not work. Try again, or use your password.");
-    const next = q.get("next");
+    const next = safeNext(q.get("next"));
     if (next) setGoogleHref(`/api/v1/auth/google?next=${encodeURIComponent(next)}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function go(e: string, p: string) {
     setErr("");
     setBusy(true);
     try {
-      await api.login(e, p);
-      const next = new URLSearchParams(window.location.search).get("next") ?? "/dashboard";
-      window.location.href = next.startsWith("/") ? next : "/dashboard";
+      const { staff } = await api.login(e, p);
+      const next = new URLSearchParams(window.location.search).get("next");
+      // Land each role on a page it can actually use; an explicit
+      // "next" from a guarded page always wins.
+      const home = staff.role === "OWNER" ? "/dashboard"
+        : staff.role === "BAR" ? "/bar"
+        : staff.role === "SHOP" ? "/shop"
+        : "/bookings";
+      window.location.href = safeNext(next) ?? home;
     } catch (ex) {
       setErr(ex instanceof ApiClientError ? ex.message : "Sign-in failed. Try again.");
       setBusy(false);
@@ -87,7 +100,7 @@ export default function Login() {
         </div>
       </div>
       <p className="member-link">
-        A club member? <a href="/member/login">Member sign in</a>
+        A club member? <Link href="/member/login">Member sign in</Link>
       </p>
     </main>
   );

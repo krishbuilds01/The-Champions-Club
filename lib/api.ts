@@ -57,13 +57,13 @@ export const api = {
     start: number;
     name: string;
     phone?: string;
-    type?: "REGULAR" | "TRIAL";
+    type?: "REGULAR" | "TRIAL" | "FRIDAY_SOCIAL";
   }) => post<BookingDTO>("/bookings", input),
   bookings: (date?: string) => call<BookingDTO[]>(`/bookings${date ? `?date=${date}` : ""}`),
   cancelBooking: (id: number) => post<BookingDTO>(`/bookings/${id}/cancel`),
   members: (q?: string) => call<MemberDTO[]>(`/members${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   expiringMembers: () => call<ExpiringDTO[]>("/members/expiring"),
-  createMember: (input: { name: string; phone?: string; email?: string; planCode: string }) =>
+  createMember: (input: { name: string; phone?: string; email?: string; planCode: string; dateOfBirth?: string }) =>
     post<MemberDTO>("/members", input),
   createOrder: (input: {
     items: { productId: number; qty: number }[];

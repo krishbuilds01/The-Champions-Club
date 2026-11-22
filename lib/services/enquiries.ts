@@ -62,6 +62,12 @@ export async function updateEnquiry(
   if (!row) throw notFound("No such enquiry");
   if (input.status === "CONVERTED")
     throw badRequest("Use the convert action to turn an enquiry into a member");
+  // CONVERTED is terminal: once the enquiry became a member, it
+  // cannot be moved back to NEW, QUOTED or LOST.
+  if (row.status === "CONVERTED" && row.memberId && input.status && input.status !== "CONVERTED")
+    throw conflict("That enquiry already became a member — it cannot go back");
+  if (input.status === undefined && input.note === undefined)
+    throw badRequest("Nothing to update");
   const updated = await db.enquiry.update({ where: { id }, data: input });
   return toDTO(updated);
 }
@@ -100,12 +106,18 @@ export async function convertEnquiry(id: number, planCode: string): Promise<Enqu
   const isEmail = contact.includes("@");
   const phone = !isEmail && contact.replace(/\D/g, "").length >= 10 ? contact : "";
   const email = isEmail ? contact : undefined;
-  const member = await createMember({ name: row.name, phone, email, planCode }).catch((e) => {
-    throw e instanceof Error ? e : badRequest("Could not create the member");
-  });
-  const updated = await db.enquiry.update({
-    where: { id },
-    data: { status: "CONVERTED", memberId: member.id },
-  });
+  // One transaction: if the enquiry update fails, the member
+  // creation rolls back too, so a retry cannot create a second member.
+  const updated = await db
+    .$transaction(async (tx) => {
+      const member = await createMember({ name: row.name, phone, email, planCode }, tx);
+      return tx.enquiry.update({
+        where: { id },
+        data: { status: "CONVERTED", memberId: member.id },
+      });
+    })
+    .catch((e) => {
+      throw e instanceof Error ? e : badRequest("Could not create the member");
+    });
   return toDTO(updated);
 }

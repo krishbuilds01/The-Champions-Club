@@ -10,7 +10,8 @@ const starts = allStarts();
 
 export default function Trial() {
   const today = todayISO();
-  const [f, setF] = useState({ name: "", phone: "", courtId: 1, date: today, startTime: 1020 });
+  const [f, setF] = useState({ name: "", phone: "", email: "", courtId: 1, date: today, startTime: 1020 });
+  const [slotMsg, setSlotMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -21,12 +22,12 @@ export default function Trial() {
 
   async function ask() {
     if (!f.name.trim()) return setQMsg("Add your name so we know who is asking.");
-    if (f.phone.replace(/\D/g, "").length < 10 && !f.phone.includes("@")) return setQMsg("Add a phone number or email so we can reply.");
+    if (f.phone.replace(/\D/g, "").length < 10 && !f.phone.includes("@") && !f.email.includes("@")) return setQMsg("Add a phone number or email so we can reply.");
     if (!q.message.trim()) return setQMsg("Please write your question first.");
     setQBusy(true);
     setQMsg("");
     try {
-      await api.createEnquiry({ name: f.name.trim(), contact: f.phone.trim(), interest: q.interest, message: q.message.trim() });
+      await api.createEnquiry({ name: f.name.trim(), contact: f.phone.trim() || f.email.trim(), interest: q.interest, message: q.message.trim() });
       setQ({ interest: "Membership", message: "" });
       setQMsg("Sent. The front desk will get back to you.");
     } catch (e) {
@@ -40,24 +41,29 @@ export default function Trial() {
   const avail = useApi(() => api.availability(f.courtId, f.date), [f.courtId, f.date]);
   const taken = avail.data?.taken ?? [];
   const freeSlots = starts.filter(
-    (t) => !taken.some((b) => Math.abs(b - t) < 60) && (f.date !== today || t + 60 > istMinutesNow()),
+    (t) => !taken.some((b) => Math.abs(b - t) < 60) && (f.date !== today || t > istMinutesNow()),
   );
   const court = courts.data?.find((c) => c.id === f.courtId);
 
+  // Only move the pick if the chosen slot is no longer free — and say so.
   useEffect(() => {
-    if (freeSlots.length && !freeSlots.includes(f.startTime))
+    if (freeSlots.length && !freeSlots.includes(f.startTime)) {
       setF((prev) => ({ ...prev, startTime: freeSlots[0] }));
+      setSlotMsg("That time was just taken, so we moved you to the next free slot.");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avail.data]);
 
   async function submit() {
     setErr("");
     if (!f.name.trim()) return setErr("Your name is missing.");
-    if (f.phone.replace(/\D/g, "").length < 10) return setErr("Add a 10-digit phone number the desk can reach you on.");
+    const hasPhone = f.phone.replace(/\D/g, "").length >= 10;
+    const hasEmail = f.email.includes("@");
+    if (!hasPhone && !hasEmail) return setErr("Add a 10-digit phone number or an email the desk can reach you on.");
     if (!freeSlots.includes(f.startTime)) return setErr("That time was just taken. Pick another slot.");
     setBusy(true);
     try {
-      await api.createBooking({ courtId: f.courtId, date: f.date, start: f.startTime, name: f.name.trim(), phone: f.phone.trim(), type: "TRIAL" });
+      await api.createBooking({ courtId: f.courtId, date: f.date, start: f.startTime, name: f.name.trim(), phone: f.phone.trim() || f.email.trim(), type: "TRIAL" });
       setDone(true);
     } catch (e) {
       setErr(e instanceof ApiClientError ? e.message : "Booking failed. Try again.");
@@ -110,6 +116,10 @@ export default function Trial() {
             <input id="t-phone" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} autoComplete="tel" inputMode="tel" placeholder="So the desk can confirm" />
           </div>
           <div>
+            <label htmlFor="t-email">Email — if you would rather not share a phone</label>
+            <input id="t-email" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} autoComplete="email" placeholder="Either a phone or an email works" />
+          </div>
+          <div>
             <label>Court</label>
             <div className="seg" role="group" aria-label="Court">
               {courts.data!.map((c) => (
@@ -124,7 +134,7 @@ export default function Trial() {
             </div>
             <div>
               <label htmlFor="t-time">Start time</label>
-              <select id="t-time" value={f.startTime} onChange={(e) => setF({ ...f, startTime: Number(e.target.value) })}>
+              <select id="t-time" value={f.startTime} onChange={(e) => { setSlotMsg(""); setF({ ...f, startTime: Number(e.target.value) }); }}>
                 {freeSlots.map((t) => (
                   <option key={t} value={t}>{fmtTime(t)}</option>
                 ))}
@@ -132,6 +142,7 @@ export default function Trial() {
             </div>
           </div>
           {freeSlots.length === 0 && <div className="notice err">No free slots on {court?.name} that day. Try another court or day.</div>}
+          {slotMsg && <div className="notice" role="status">{slotMsg}</div>}
           {err && <div className="notice err" role="alert">{err}</div>}
           <div>
             <button className="btn btn-ink" style={{ width: "100%" }} disabled={freeSlots.length === 0 || busy} onClick={submit}>
@@ -142,7 +153,7 @@ export default function Trial() {
         </div>
           <div className="panel" style={{ marginTop: 16 }}>
             <h3 style={{ marginBottom: 6 }}>Ask the club anything</h3>
-            <p className="muted" style={{ marginBottom: 14 }}>Membership, courts, coaching, the shop. Your question lands on the front desk&apos;s list, with the name and phone above.</p>
+            <p className="muted" style={{ marginBottom: 14 }}>Membership, courts, coaching, the shop. Your question lands on the front desk&apos;s list, with the name and contact above.</p>
             <div className="form-grid">
               <div>
                 <label htmlFor="q-interest">I am asking about</label>

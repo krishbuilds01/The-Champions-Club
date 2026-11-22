@@ -15,7 +15,11 @@ const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 async function sums(fromISO: string, toISO: string): Promise<MoneySplit> {
   const [courtAgg, orders, tabs] = await Promise.all([
     db.booking.aggregate({
-      where: { date: { gte: day(fromISO), lte: day(toISO) }, state: "BOOKED" },
+      // One IST day window for every source: courts by date within
+      // [from, to+1), exactly like the orders/tabs windows below.
+      // (lte day(to) silently dropped a booking whose date carried
+      // a time after UTC midnight on the last day.)
+      where: { date: { gte: day(fromISO), lt: day(addDaysISO(toISO, 1)) }, state: "BOOKED" },
       _sum: { price: true },
     }),
     db.order.findMany({
@@ -66,6 +70,8 @@ export async function getDashboard(date: string): Promise<DashboardDTO> {
   for (const r of [...dayOrders, ...dayTabs])
     if (r.payMethod) byMethodMap.set(r.payMethod, (byMethodMap.get(r.payMethod) ?? 0) + r.total);
 
+  const byMethodTotal = [...byMethodMap.values()].reduce((s, a) => s + a, 0);
+
   return {
     date,
     totals: today,
@@ -79,5 +85,12 @@ export async function getDashboard(date: string): Promise<DashboardDTO> {
       .filter((p) => p.stock !== null && p.stock <= p.lowAt)
       .map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, lowAt: p.lowAt, category: p.category })),
     expiring,
-  };
+    // Courts have no payMethod recorded (Booking has no payMethod
+    // field), so byMethod never adds up to totals.total. These two
+    // fields make the gap explicit instead of hiding it: the page
+    // can show byMethodTotal against the total, and how much of the
+    // total is court money with no method recorded.
+    byMethodTotal,
+    courtUnrecorded: today.courts,
+  } as DashboardDTO & { byMethodTotal: number; courtUnrecorded: number };
 }

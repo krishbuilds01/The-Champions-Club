@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { badRequest, conflict, forbidden, notFound } from "../errors";
-import { istDayStart, todayISO } from "../format";
+import { istDayStart, addDaysISO, todayISO } from "../format";
 import { createRazorpayOrder, razorpayConfigured, verifyPaymentSignature } from "../razorpay";
 import type { OrderDTO, TabDTO } from "../types";
 import { memberState, findMemberByName } from "./members";
@@ -13,6 +13,13 @@ import { memberState, findMemberByName } from "./members";
 type Item = { productId: number; qty: number };
 
 async function priceItems(items: Item[], category: "GEAR" | "BAR") {
+  // The service never trusts quantities: zod already checks them on
+  // the route, but this runs for every caller, so a bad qty can never
+  // reach the stock maths (a negative qty would increase stock).
+  for (const i of items) {
+    if (!Number.isInteger(i.qty) || i.qty < 1)
+      throw badRequest("Quantities must be whole numbers of at least 1");
+  }
   const ids = items.map((i) => i.productId);
   const products = await db.product.findMany({ where: { id: { in: ids } } });
   if (products.length !== ids.length) throw badRequest("One of those products does not exist");
@@ -33,6 +40,10 @@ export async function createOrder(input: {
   fulfilment?: "PICKUP" | "DELIVERY";
   address?: string;
   payOnline?: boolean;
+  // True only when a signed-in staff member takes the order at the
+  // counter. Public orders are PENDING until paid — never PAID on
+  // the caller's word alone.
+  paidAtCounter?: boolean;
 }) {
   const fulfilment = input.fulfilment ?? "PICKUP";
   const address = fulfilment === "DELIVERY" ? (input.address ?? "").trim() : "";
@@ -48,6 +59,9 @@ export async function createOrder(input: {
     else acc.push({ ...i });
     return acc;
   }, []);
+  // Merging happens before validation, so 99 + 99 of one product
+  // cannot slip past the 99-per-line cap as 198.
+  if (items.some((i) => i.qty > 99)) throw badRequest("At most 99 of one product per order");
   const member = await findMemberByName(input.name);
   const active = member && memberState(member.expiresOn) !== "expired";
   const discountPct = active ? member.plan.shopDiscount : 0;
@@ -73,7 +87,7 @@ export async function createOrder(input: {
         discount,
         total: subtotal - discount,
         payMethod: input.payOnline ? "ONLINE" : input.payMethod,
-        payState: input.payOnline ? "PENDING" : "PAID",
+        payState: input.payOnline || !input.paidAtCounter ? "PENDING" : "PAID",
         fulfilment,
         address: address || null,
         items: {
@@ -118,11 +132,13 @@ export async function confirmPayment(
     include: { items: { include: { product: true } } },
   });
   if (!order) throw notFound("No such order");
-  if (order.payState === "PAID") return toOrderDTO(order as OrderRow);
+  // The signature is checked first: a forged confirm for an
+  // already-paid order used to return success without any check.
   if (order.razorpayOrderId !== proof.razorpayOrderId)
     throw badRequest("That payment does not belong to this order");
   if (!verifyPaymentSignature(proof.razorpayOrderId, proof.paymentId, proof.signature))
     throw forbidden("Payment could not be verified");
+  if (order.payState === "PAID") return toOrderDTO(order as OrderRow);
   const updated = await db.order.update({
     where: { id: orderId },
     data: { payState: "PAID", razorpayPaymentId: proof.paymentId },
@@ -161,13 +177,36 @@ export const toOrderDTO = (o: OrderRow): OrderDTO => ({
   items: o.items.map((i) => ({ productId: i.productId, name: i.product.name, qty: i.qty, price: i.price })),
 });
 
-export async function listOrders(): Promise<OrderDTO[]> {
+// Order history: no dates means today (the staff default); from/to
+// open any window, page is 1-based, 50 rows a page.
+export async function listOrders(opts: { from?: string; to?: string; page?: number } = {}): Promise<OrderDTO[]> {
+  const page = Math.max(1, opts.page ?? 1);
+  const from = opts.from ? istDayStart(opts.from) : istDayStart(todayISO());
+  const to = opts.to ? istDayStart(addDaysISO(opts.to, 1)) : istDayStart(addDaysISO(todayISO(), 1));
   const rows = await db.order.findMany({
-    where: { createdAt: { gte: istDayStart(todayISO()) } },
+    where: { createdAt: { gte: from, lt: to } },
     include: { items: { include: { product: true } } },
     orderBy: { createdAt: "desc" },
+    take: 50,
+    skip: (page - 1) * 50,
   });
   return rows.map(toOrderDTO);
+}
+
+// A PENDING counter order becomes PAID when the desk takes the money.
+// Atomic: only a PENDING order flips, so two staff cannot pay it twice.
+export async function markOrderPaid(id: number): Promise<OrderDTO> {
+  const updated = await db.order.updateMany({
+    where: { id, payState: "PENDING" },
+    data: { payState: "PAID" },
+  });
+  if (updated.count === 0) {
+    const exists = await db.order.findUnique({ where: { id } });
+    if (!exists) throw notFound("No such order");
+    throw conflict("That order is already paid");
+  }
+  const row = await db.order.findUnique({ where: { id }, include: { items: { include: { product: true } } } });
+  return toOrderDTO(row as OrderRow);
 }
 
 // ---------- Bar: tabs with a real open → settle life ----------
@@ -218,21 +257,28 @@ export async function listTabs(): Promise<TabDTO[]> {
 }
 
 export async function openTab(input: { who: string; tableNo?: number }): Promise<TabDTO> {
-  if (input.tableNo !== undefined) {
-    if (input.tableNo < 1 || input.tableNo > 8) throw badRequest("Tables run T1 to T8");
-    const busy = await db.tab.findFirst({ where: { tableNo: input.tableNo, status: "OPEN" } });
-    if (busy) throw conflict(`Table ${input.tableNo} already has an open tab (${busy.who})`);
-  }
+  if (input.tableNo !== undefined && (input.tableNo < 1 || input.tableNo > 8))
+    throw badRequest("Tables run T1 to T8");
   const member = await findMemberByName(input.who);
-  const tab = await db.tab.create({
-    data: {
-      who: member?.name ?? input.who,
-      memberId: member?.id,
-      tableNo: input.tableNo,
-      status: "OPEN",
-      planCode: member?.plan.code ?? "walkin",
-    },
-    include: tabInclude,
+  if (member && memberState(member.expiresOn) === "expired")
+    throw forbidden(`${member.name}'s plan has expired. The front desk can renew it in a minute.`);
+  // The occupied-table check and the create run in one transaction,
+  // so two requests racing for the same table cannot both open a tab.
+  const tab = await db.$transaction(async (tx) => {
+    if (input.tableNo !== undefined) {
+      const busy = await tx.tab.findFirst({ where: { tableNo: input.tableNo, status: "OPEN" } });
+      if (busy) throw conflict(`Table ${input.tableNo} already has an open tab (${busy.who})`);
+    }
+    return tx.tab.create({
+      data: {
+        who: member?.name ?? input.who,
+        memberId: member?.id,
+        tableNo: input.tableNo,
+        status: "OPEN",
+        planCode: member?.plan.code ?? "walkin",
+      },
+      include: tabInclude,
+    });
   });
   return toTabDTO(tab as TabRow);
 }
@@ -263,23 +309,29 @@ export async function settleTab(id: number, payMethod: "CASH" | "CARD" | "UPI"):
   });
   if (!tab) throw notFound("No such tab");
   if (tab.status !== "OPEN") throw conflict("That tab is already settled");
-  // The discount comes from the member's plan on record, applied here at
-  // settle time. Nobody types a discount, and nobody can inflate one.
+  // The discount comes from the plan snapshotted on the tab when it
+  // was opened (tab.planCode), not the member's current plan: a plan
+  // change between open and settle must not change the discount.
+  // Nobody types a discount, and nobody can inflate one.
+  const plan =
+    tab.planCode === "walkin" ? null : await db.plan.findUnique({ where: { code: tab.planCode } });
   const member = tab.member;
   const discountPct =
-    member && memberState(member.expiresOn) !== "expired" ? member.plan.barDiscount : 0;
+    plan && member && memberState(member.expiresOn) !== "expired" ? plan.barDiscount : 0;
   const discount = Math.round((tab.subtotal * discountPct) / 100);
-  const updated = await db.tab.update({
-    where: { id },
+  // Atomic settle: only an OPEN tab flips to SETTLED. Two settles
+  // racing each other cannot both win — the loser updates 0 rows.
+  const settled = await db.tab.updateMany({
+    where: { id, status: "OPEN" },
     data: {
       status: "SETTLED",
-      planCode: member ? member.plan.code : "walkin",
+      planCode: tab.planCode,
       discountPct,
       total: tab.subtotal - discount,
       payMethod,
       settledAt: new Date(),
     },
-    include: tabInclude,
   });
-  return toTabDTO(updated as TabRow);
+  if (settled.count === 0) throw conflict("That tab is already settled");
+  return toTabDTO(await getTabRow(id));
 }

@@ -55,6 +55,11 @@ export type DashboardDTO = {
   totals: MoneySplit;
   periods: { today: MoneySplit; week: MoneySplit; month: MoneySplit };
   byMethod: { method: "CASH" | "CARD" | "UPI" | "ONLINE"; amount: number }[];
+  // byMethod covers shop + bar only (Booking has no payMethod yet):
+  // byMethodTotal is what byMethod adds up to, courtUnrecorded is the
+  // court takings with no recorded method, so total = byMethodTotal + courtUnrecorded.
+  byMethodTotal: number;
+  courtUnrecorded: number;
   onCourt: BookingDTO[];
   lowStock: ProductDTO[];
   expiring: ExpiringDTO[];

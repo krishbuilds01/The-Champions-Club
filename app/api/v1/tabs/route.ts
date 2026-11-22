@@ -6,7 +6,7 @@ import { listTabs, openTab } from "@/lib/services/sales";
 // The bar till is bar work: only the owner and bar staff run tabs.
 export const GET = (req: Request) =>
   handle(async () => {
-    await requireRole(req, "OWNER", "BAR");
+    await requireRole(req, "OWNER", "BAR", "FRONT_DESK");
     return listTabs();
   });
 

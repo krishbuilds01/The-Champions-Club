@@ -173,6 +173,16 @@ export async function currentMember(): Promise<MemberSession | null> {
   return token ? verifyMemberToken(token) : null;
 }
 
+// A post-login redirect must stay on this site: a path starting with "/"
+// but never "//" (protocol-relative, resolves to another host), never
+// containing "://" or a backslash. Anything else falls back to /dashboard.
+export const safeNextPath = (next: string | null | undefined): string => {
+  if (!next) return "/dashboard";
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("://") || next.includes("\\"))
+    return "/dashboard";
+  return next;
+};
+
 export const GOOGLE_REDIRECT_URI = "https://the-champions-club.vercel.app/api/v1/auth/google/callback";
 
 export function getGoogleRedirectUri(req?: { headers: { get: (name: string) => string | null }; nextUrl?: { host?: string; protocol?: string } }): string {

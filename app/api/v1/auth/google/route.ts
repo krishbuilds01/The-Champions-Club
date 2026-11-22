@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "node:crypto";
-import { getGoogleRedirectUri } from "@/lib/auth";
+import { getGoogleRedirectUri, safeNextPath } from "@/lib/auth";
 
 // Starts Google sign-in for staff. Needs GOOGLE_CLIENT_ID and
 // GOOGLE_CLIENT_SECRET in the environment.
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const opts = { httpOnly: true, sameSite: "lax" as const, path: "/", maxAge: 600 };
   jar.set("cc_gstate", state, opts);
   const next = req.nextUrl.searchParams.get("next") ?? "/dashboard";
-  jar.set("cc_gnext", next.startsWith("/") ? next : "/dashboard", opts);
+  jar.set("cc_gnext", safeNextPath(next), opts);
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", id);
   url.searchParams.set("redirect_uri", getGoogleRedirectUri(req));

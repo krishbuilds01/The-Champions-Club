@@ -381,3 +381,6 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
 .bar-step b { display: block; font-family: var(--font-display), sans-serif; font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 .bar-step p { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
 @media (max-width: 640px) { .bar-steps { grid-template-columns: 1fr; } }
+
+/* Staff rota: today's row is highlighted in volt. */
+.ledger tr.row-today td { background: rgba(223, 255, 69, 0.22); }

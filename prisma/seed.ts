@@ -26,7 +26,7 @@ const plus = (base: Date, days: number) => new Date(base.getTime() + days * dayM
 async function main() {
   // One truncate, identities restarted, so ids are stable run to run.
   await db.$executeRawUnsafe(
-    'TRUNCATE "TabItem","Tab","OrderItem","Order","Booking","Enquiry","Member","Product","Court","Plan","Staff" RESTART IDENTITY CASCADE',
+    'TRUNCATE "TabItem","Tab","OrderItem","Order","Booking","Enquiry","Member","Product","Court","Plan","Staff","Invoice","Expense","Payroll","Shift" RESTART IDENTITY CASCADE',
   );
 
   const today = todayIST();

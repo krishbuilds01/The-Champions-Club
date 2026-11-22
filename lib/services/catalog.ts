@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { badRequest } from "../errors";
+import { badRequest, notFound } from "../errors";
 import type { CourtDTO, PlanDTO, ProductDTO } from "../types";
 
 // The club's standing data: plans, courts, products. Read by every page
@@ -80,4 +80,19 @@ export async function createProduct(input: {
     lowAt: created.lowAt,
     category: created.category,
   };
+}
+
+// Stock only goes up here: the shop floor sells it down. There was no
+// way to add stock or change the low-stock level after seeding.
+export async function restockProduct(id: number, qty: number, lowAt?: number): Promise<ProductDTO> {
+  if (!Number.isInteger(qty) || qty <= 0) throw badRequest("Restock quantity must be a whole number above 0");
+  if (lowAt !== undefined && (!Number.isInteger(lowAt) || lowAt < 0)) throw badRequest("lowAt must be a whole number of 0 or more");
+  const product = await db.product.findUnique({ where: { id } });
+  if (!product) throw notFound("No such product");
+  if (product.stock === null) throw badRequest("Bar items are not stocked — there is nothing to restock");
+  const r = await db.product.update({
+    where: { id },
+    data: { stock: { increment: qty }, ...(lowAt !== undefined ? { lowAt } : {}) },
+  });
+  return { id: r.id, name: r.name, price: r.price, stock: r.stock, lowAt: r.lowAt, category: r.category };
 }

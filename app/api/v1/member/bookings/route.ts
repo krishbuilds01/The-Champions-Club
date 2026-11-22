@@ -13,5 +13,5 @@ export const POST = (req: Request) =>
     const session = await requireMember(req);
     const input = parse(memberBookingInput, await body(req));
     const m = await getMember(session.id);
-    return createBooking({ ...input, name: m.name, phone: m.phone, type: "REGULAR" });
+    return createBooking({ ...input, name: m.name, phone: m.phone });
   }, 201);

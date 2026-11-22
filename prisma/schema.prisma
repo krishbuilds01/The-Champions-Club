@@ -63,6 +63,7 @@ model Plan {
   barDiscount  Int // percent
   termDays     Int
   members      Member[]
+  renewals     MembershipRenewal[]
 }
 
 model Court {
@@ -83,9 +84,11 @@ model Member {
   plan      Plan      @relation(fields: [planId], references: [id])
   joinedOn  DateTime  @db.Date
   expiresOn DateTime  @db.Date
+  dateOfBirth DateTime? @db.Date // Junior members must be under 18 — checked against joinedOn
   bookings  Booking[]
   orders    Order[]
   tabs      Tab[]
+  renewals  MembershipRenewal[]
   createdAt DateTime  @default(now())
 
   @@index([name])
@@ -104,10 +107,14 @@ model Booking {
   type      BookingType  @default(REGULAR)
   price     Int // rupees, set from the plan or the walk-in rate at booking time
   state     BookingState @default(BOOKED)
+  payMethod String? // how the court was paid — CASH | CARD | UPI | ONLINE; null when not recorded
+  payState  String? @default("UNPAID") // UNPAID | PAID
+  paidAt    DateTime?
   createdAt DateTime     @default(now())
 
   @@index([courtId, date])
   @@index([date, who])
+  @@index([memberId])
 }
 
 model Product {
@@ -117,6 +124,7 @@ model Product {
   stock    Int? // null for bar items, which are not stocked
   lowAt    Int         @default(5)
   category Category
+  imageUrl String? // photo for the shop / bar card; name-based fallback when empty
   items    OrderItem[]
   tabItems TabItem[]
 }
@@ -134,12 +142,15 @@ model Order {
   fulfilment String     @default("PICKUP") // PICKUP | DELIVERY
   address   String? // delivery address, set only for DELIVERY
   payState  String      @default("PAID") // PENDING | PAID — online orders start PENDING
+  status    String      @default("PLACED") // PLACED | PACKED | DELIVERED | CANCELLED
+  deliveredAt DateTime?
   razorpayOrderId   String?
   razorpayPaymentId String?
   createdAt DateTime    @default(now())
   items     OrderItem[]
 
   @@index([createdAt])
+  @@index([memberId])
 }
 
 model OrderItem {
@@ -171,6 +182,7 @@ model Tab {
   items       TabItem[]
 
   @@index([settledAt])
+  @@index([memberId])
 }
 
 // Owner finance, kept light: bills the club sends out, money going
@@ -183,6 +195,9 @@ model Invoice {
   status   String    @default("UNPAID") // UNPAID | PAID
   issuedOn DateTime  @default(now())
   paidAt   DateTime?
+  taxRate   Int? // percent charged on this invoice, if any
+  taxAmount Int? // rupees of tax included in amount
+  memberId  Int? // member this bill is for, when it is one
 }
 
 model Expense {
@@ -203,7 +218,10 @@ model Payroll {
   leaveDays Int      @default(0)
   tax       Int      @default(0) // tax deducted, rupees
   status    String   @default("PENDING") // PENDING | PAID
+  staffId   Int? // Staff row this pay belongs to (set from the roster name)
   createdAt DateTime @default(now())
+
+  @@unique([staffId, month])
 }
 
 model Enquiry {
@@ -245,6 +263,7 @@ model Staff {
   pinHash      String?
   role         Role    @default(STAFF)
   shifts       Shift[]
+  leaves       Leave[]
 }
 
 // The rota: who works which part of which day. One row per assignment.
@@ -257,4 +276,41 @@ model Shift {
   createdAt DateTime @default(now())
 
   @@unique([staffId, date, part])
+}
+
+// Leave: a staff member's time off. Approved leave is the source of
+// truth for Payroll.leaveDays; assignShift must refuse shifts that
+// overlap approved leave (enforced by the caller, not the schema).
+model Leave {
+  id        Int      @id @default(autoincrement())
+  staffId   Int
+  staff     Staff    @relation(fields: [staffId], references: [id])
+  fromDate  DateTime @db.Date
+  toDate    DateTime @db.Date
+  type      String // ANNUAL | SICK | UNPAID | OTHER
+  reason    String?
+  status    String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  decidedBy String?
+  decidedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([staffId])
+}
+
+// MembershipRenewal: the paper trail for a member renewing a plan —
+// the booking error promises the front desk "can renew it in a minute",
+// and this is the record that renewal leaves behind.
+model MembershipRenewal {
+  id          Int      @id @default(autoincrement())
+  memberId    Int
+  member      Member   @relation(fields: [memberId], references: [id])
+  planId      Int
+  plan        Plan     @relation(fields: [planId], references: [id])
+  amount      Int // rupees paid for the renewal
+  payMethod   String // CASH | CARD | UPI | ONLINE
+  renewedFrom DateTime @db.Date
+  renewedTo   DateTime @db.Date
+  createdAt   DateTime @default(now())
+
+  @@index([memberId])
 }

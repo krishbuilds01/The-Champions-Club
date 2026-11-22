@@ -11,10 +11,12 @@ export default function Invoices() {
   const [form, setForm] = useState({ billedTo: "", detail: "", amount: "" });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState<number | null>(null);
 
   const list = invoices.data ?? [];
   const unpaid = list.filter((i) => i.status === "UNPAID");
   const owed = unpaid.reduce((s, i) => s + i.amount, 0);
+  const paidTotal = list.filter((i) => i.status === "PAID").reduce((s, i) => s + i.amount, 0);
 
   async function add() {
     const amount = Number(form.amount);
@@ -34,15 +36,18 @@ export default function Invoices() {
     }
   }
 
-  async function pay(id: number) {
-    setBusy(true);
+  async function pay(i: { id: number; billedTo: string; amount: number }) {
+    if (!window.confirm(`Mark the invoice for ${i.billedTo} (${inr(i.amount)}) as paid?`)) return;
+    setMsg(null);
+    setBusyId(i.id);
     try {
-      await api.payInvoice(id);
+      await api.payInvoice(i.id);
+      setMsg({ ok: true, text: `Invoice for ${i.billedTo} marked paid, ${inr(i.amount)}.` });
       void invoices.reload();
     } catch (e) {
       setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Saving failed. Try again." });
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   }
 
@@ -65,7 +70,7 @@ export default function Invoices() {
           <div className="figures">
             <div className="figure"><p className="f-label">Owed to the club</p><p className="f-value num">{inr(owed)}</p></div>
             <div className="figure"><p className="f-label">Unpaid invoices</p><p className="f-value num">{unpaid.length}</p></div>
-            <div className="figure"><p className="f-label">Paid so far</p><p className="f-value num">{list.length - unpaid.length}</p></div>
+            <div className="figure"><p className="f-label">Paid so far</p><p className="f-value num">{inr(paidTotal)}</p></div>
           </div>
 
           {list.length === 0 ? (
@@ -82,7 +87,7 @@ export default function Invoices() {
                       <td className="hide-m num">{i.issuedOn}</td>
                       <td className="r num">{inr(i.amount)}</td>
                       <td><span className={`status ${i.status === "PAID" ? "active" : "expiring"}`}>{i.status === "PAID" ? "Paid" : "Unpaid"}</span></td>
-                      <td className="r">{i.status === "UNPAID" && <button className="btn btn-quiet" disabled={busy} onClick={() => pay(i.id)}>Mark paid</button>}</td>
+                      <td className="r">{i.status === "UNPAID" && <button className="btn btn-quiet" disabled={busyId === i.id} onClick={() => pay(i)}>{busyId === i.id ? "Paying..." : "Mark paid"}</button>}</td>
                     </tr>
                   ))}
                 </tbody>

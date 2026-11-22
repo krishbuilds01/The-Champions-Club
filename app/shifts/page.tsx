@@ -27,6 +27,7 @@ export default function Shifts() {
 
   async function add() {
     if (!staffId) return;
+    if (form.date < todayISO()) return setMsg({ ok: false, text: "That date has passed. Pick today or later." });
     setBusy(true);
     setMsg(null);
     try {
@@ -40,7 +41,8 @@ export default function Shifts() {
     }
   }
 
-  async function remove(id: number) {
+  async function remove(id: number, label: string) {
+    if (!window.confirm(`Remove ${label} from the rota?`)) return;
     setBusy(true);
     try {
       await api.removeShift(id);
@@ -58,7 +60,7 @@ export default function Shifts() {
     return rows.map((s) => (
       <span key={s.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, marginRight: 10 }}>
         {s.staffName}
-        <button aria-label={`Remove ${s.staffName} from ${part.toLowerCase()} ${date}`} disabled={busy} onClick={() => remove(s.id)} style={{ fontWeight: 700, lineHeight: 1 }}>×</button>
+        <button aria-label={`Remove ${s.staffName} from ${part.toLowerCase()} ${date}`} disabled={busy} onClick={() => remove(s.id, `${s.staffName}, ${part.toLowerCase()} ${date}`)} style={{ fontWeight: 700, lineHeight: 1 }}>×</button>
       </span>
     ));
   };
@@ -80,6 +82,8 @@ export default function Shifts() {
 
       {shifts.loading || roster.loading ? (
         <Loading />
+      ) : roster.error ? (
+        <ErrorBox message={`Could not load the staff roster: ${roster.error}`} onRetry={roster.reload} />
       ) : shifts.error ? (
         <ErrorBox message={shifts.error} onRetry={shifts.reload} />
       ) : (
@@ -89,7 +93,7 @@ export default function Shifts() {
               <thead><tr><th>Day</th><th>Morning</th><th>Evening</th></tr></thead>
               <tbody>
                 {days.map((d) => (
-                  <tr key={d} className={d === todayISO() ? "" : ""}>
+                  <tr key={d} className={d === todayISO() ? "row-today" : ""}>
                     <td style={{ fontWeight: 500, whiteSpace: "nowrap" }}>{dayLabel(d)}{d === todayISO() ? " · today" : ""}</td>
                     <td>{cell(d, "MORNING")}</td>
                     <td>{cell(d, "EVENING")}</td>
@@ -113,7 +117,7 @@ export default function Shifts() {
                 </div>
                 <div>
                   <label htmlFor="sh-date">Date</label>
-                  <input id="sh-date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                  <input id="sh-date" type="date" value={form.date} min={todayISO()} onChange={(e) => setForm({ ...form, date: e.target.value })} />
                 </div>
                 <div>
                   <label>Part of day</label>

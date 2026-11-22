@@ -18,12 +18,15 @@ export default function Expenses() {
   const list = expenses.data ?? [];
   const monthPrefix = todayISO().slice(0, 7);
   const monthOut = list.filter((e) => e.spentOn.startsWith(monthPrefix)).reduce((s, e) => s + e.amount, 0);
+  // "Taken in" and "Spent" now share one window, the calendar month.
+  // Note: this figure is the dashboard's month total; a true calendar-
+  // month income figure needs a dashboard API change (another agent).
   const monthIn = dash.data?.periods.month.total ?? null;
 
   async function add() {
     const amount = Number(form.amount);
     if (!form.title.trim()) return setMsg({ ok: false, text: "What was this expense for?" });
-    if (!Number.isInteger(amount) || amount <= 0) return setMsg({ ok: false, text: "Add the amount spent." });
+    if (!Number.isFinite(amount) || amount <= 0) return setMsg({ ok: false, text: "Add the amount spent." });
     setBusy(true);
     setMsg(null);
     try {
@@ -56,7 +59,7 @@ export default function Expenses() {
         <>
           <div className="figures">
             <div className="figure"><p className="f-label">Spent this month</p><p className="f-value num">{inr(monthOut)}</p></div>
-            <div className="figure"><p className="f-label">Taken in, last 30 days</p><p className="f-value num">{monthIn === null ? "—" : inr(monthIn)}</p></div>
+            <div className="figure"><p className="f-label">Taken in this month</p><p className="f-value num">{monthIn === null ? "—" : inr(monthIn)}</p></div>
             <div className="figure"><p className="f-label">Difference</p><p className="f-value num">{monthIn === null ? "—" : inr(monthIn - monthOut)}</p></div>
           </div>
 
@@ -90,7 +93,7 @@ export default function Expenses() {
                 </div>
                 <div>
                   <label htmlFor="ex-amt">Amount ₹</label>
-                  <input id="ex-amt" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/\D/g, "") })} inputMode="numeric" />
+                  <input id="ex-amt" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/[^0-9.]/g, "") })} inputMode="decimal" placeholder="e.g. 1250.50" />
                 </div>
               </div>
               <div className="field-row" style={{ marginTop: 16, alignItems: "end" }}>
@@ -102,7 +105,7 @@ export default function Expenses() {
                 </div>
                 <div>
                   <label htmlFor="ex-date">Date</label>
-                  <input id="ex-date" type="date" value={form.spentOn} onChange={(e) => setForm({ ...form, spentOn: e.target.value })} />
+                  <input id="ex-date" type="date" value={form.spentOn} max={todayISO()} onChange={(e) => setForm({ ...form, spentOn: e.target.value })} />
                 </div>
               </div>
               <div style={{ marginTop: 14 }}>

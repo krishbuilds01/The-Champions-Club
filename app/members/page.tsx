@@ -3,31 +3,57 @@ import { useState } from "react";
 import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { Loading, ErrorBox, Empty } from "@/components/States";
+import { todayISO } from "@/lib/format";
 
 const stateLabel = { active: "Active", expiring: "Expiring soon", expired: "Expired" } as const;
 
 export default function Members() {
   const [q, setQ] = useState("");
   const [stateFilter, setStateFilter] = useState<"all" | "active" | "expiring" | "expired">("all");
-  const [form, setForm] = useState({ name: "", phone: "", email: "", planCode: "silver" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", dob: "", planCode: "silver" });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
-  const members = useApi(() => api.members(q || undefined), [q]);
+  const members = useApi(() => api.members(), []);
   const plans = useApi(() => api.plans());
-  const all = members.data ?? [];
+  const ql = q.trim().toLowerCase();
+  const qDigits = q.replace(/\D/g, "");
+  // The server search is name-only, so phone and email matching is done here.
+  const all = (members.data ?? []).filter(
+    (m) =>
+      !ql ||
+      m.name.toLowerCase().includes(ql) ||
+      (m.email ?? "").toLowerCase().includes(ql) ||
+      m.phone.includes(q.trim()) ||
+      (qDigits.length >= 3 && m.phone.replace(/\D/g, "").includes(qDigits)),
+  );
   const list = stateFilter === "all" ? all : all.filter((m) => m.state === stateFilter);
 
   async function add() {
     if (!form.name.trim()) return setMsg({ ok: false, text: "The member needs a name." });
     if (form.phone && form.phone.replace(/\D/g, "").length < 10)
       return setMsg({ ok: false, text: "That phone number looks short. Check it and try again." });
+    if (!form.phone.trim() && !form.email.trim())
+      return setMsg({ ok: false, text: "Add a phone number or an email — the member needs a way to sign in." });
+    if (form.email.trim() && !form.email.includes("@"))
+      return setMsg({ ok: false, text: "That email does not look right. Check it and try again." });
+    if (form.planCode === "junior") {
+      // Junior is under-18 only. The date of birth is checked here; the
+      // member API does not store it yet (another agent owns that), so
+      // the check is enforced at the desk, not in the record.
+      if (!form.dob) return setMsg({ ok: false, text: "Junior is for under-18s — add a date of birth so the age can be checked." });
+      const [by, bm, bd] = form.dob.split("-").map(Number);
+      const now = new Date();
+      let age = now.getFullYear() - by;
+      if (now.getMonth() + 1 < bm || (now.getMonth() + 1 === bm && now.getDate() < bd)) age -= 1;
+      if (age >= 18) return setMsg({ ok: false, text: `Junior is for under-18s — this member is ${age}. Pick another plan.` });
+    }
     setBusy(true);
     setMsg(null);
     try {
-      const m = await api.createMember({ name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() || undefined, planCode: form.planCode });
+      const m = await api.createMember({ name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() || undefined, planCode: form.planCode, dateOfBirth: form.dob || undefined });
       const plan = plans.data?.find((p) => p.code === form.planCode);
-      setMsg({ ok: true, text: `${m.name} added on ${m.plan}. The plan runs ${plan?.termDays ?? 365} days from today.${m.email ? " They can sign in to the member portal with their phone number as the first password." : ""}` });
-      setForm({ name: "", phone: "", email: "", planCode: "silver" });
+      setMsg({ ok: true, text: `${m.name} added on ${m.plan}. The plan runs ${plan?.termDays ?? 365} days from today.${m.email && form.phone.trim() ? " They can sign in to the member portal with their phone number as the first password." : ""}` });
+      setForm({ name: "", phone: "", email: "", dob: "", planCode: "silver" });
       void members.reload();
     } catch (e) {
       setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Adding failed. Try again." });
@@ -47,7 +73,7 @@ export default function Members() {
       <div className="toolbar">
         <div style={{ width: 420, maxWidth: "100%" }}>
           <label htmlFor="m-search">Search members</label>
-          <input id="m-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name" />
+          <input id="m-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, phone or email" />
         </div>
         {!members.loading && !members.error && all.length > 0 && (
           <p className="count-line"><b>{list.length}</b> {list.length === 1 ? "member" : "members"}{q ? " found" : ""} · {all.filter((m) => m.state === "active").length} active</p>
@@ -112,11 +138,17 @@ export default function Members() {
               <label htmlFor="m-plan">Plan</label>
               <select id="m-plan" value={form.planCode} onChange={(e) => setForm({ ...form, planCode: e.target.value })}>
                 {(plans.data ?? []).map((p) => (
-                  <option key={p.code} value={p.code}>{p.name}</option>
+                  <option key={p.code} value={p.code}>{p.name} — ₹{p.tennisPrice} tennis / ₹{p.cricketPrice} cricket, {p.termDays} days</option>
                 ))}
               </select>
             </div>
             <div><button className="btn btn-ink" onClick={add} disabled={busy}>{busy ? "Adding..." : "Add member"}</button></div>
+          </div>
+          <div className="field-row" style={{ marginTop: 16 }}>
+            <div>
+              <label htmlFor="m-dob">Date of birth {form.planCode === "junior" ? "(required for Junior — under 18 only)" : "(needed for Junior)"}</label>
+              <input id="m-dob" type="date" value={form.dob} max={todayISO()} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
+            </div>
           </div>
           {msg && <div className={`notice ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</div>}
         </div>

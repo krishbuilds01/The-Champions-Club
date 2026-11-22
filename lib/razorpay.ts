@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { badRequest } from "./errors";
 
 // Razorpay in TEST mode. Keys come from the environment
@@ -33,6 +33,10 @@ export async function createRazorpayOrder(orderId: number, amountInr: number): P
 export function verifyPaymentSignature(razorpayOrderId: string, paymentId: string, signature: string): boolean {
   const secret = keySecret();
   if (!secret) return false;
-  const expected = createHmac("sha256", secret).update(`${razorpayOrderId}|${paymentId}`).digest("hex");
-  return expected === signature;
+  const expected = createHmac("sha256", secret).update(`${razorpayOrderId}|${paymentId}`).digest();
+  // Compare in constant time, on equal-length buffers: a plain ===
+  // on hex strings leaks how many leading characters matched.
+  const given = Buffer.from(signature, "hex");
+  if (given.length !== expected.length) return false;
+  return timingSafeEqual(expected, given);
 }

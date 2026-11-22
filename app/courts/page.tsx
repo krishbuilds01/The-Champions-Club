@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiClientError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
-import { allStarts, fmtTime, inr, istMinutesNow, todayISO } from "@/lib/format";
+import { addDaysISO, allStarts, fmtTime, inr, istMinutesNow, todayISO } from "@/lib/format";
 import { Loading, ErrorBox } from "@/components/States";
 import Link from "next/link";
 import type { StaffDTO } from "@/lib/types";
@@ -11,7 +11,8 @@ const starts = allStarts();
 
 export default function Courts() {
   const today = todayISO();
-  const [courtId, setCourtId] = useState(1);
+  const [courtId, setCourtId] = useState<number | null>(null);
+  const [social, setSocial] = useState(false);
   const [date, setDate] = useState(today);
   const [slot, setSlot] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -19,7 +20,7 @@ export default function Courts() {
   const [busy, setBusy] = useState(false);
 
   const courts = useApi(() => api.courts());
-  const avail = useApi(() => api.availability(courtId, date), [courtId, date]);
+  const avail = useApi(() => (courtId === null ? Promise.resolve({ taken: [] }) : api.availability(courtId, date)), [courtId, date]);
   const lookup = useApi(
     () => (name.trim().length >= 3 ? api.lookupMember(name.trim()) : Promise.resolve({ member: null })),
     [name],
@@ -27,6 +28,17 @@ export default function Courts() {
 
   const court = courts.data?.find((c) => c.id === courtId);
   const member = lookup.data?.member ?? null;
+  // Default to the first court that actually loaded, not a hard-coded id.
+  useEffect(() => {
+    if (courtId === null && courts.data && courts.data.length > 0) setCourtId(courts.data[0].id);
+  }, [courts.data, courtId]);
+  // Friday Social Play: many members share one court on Fridays.
+  const isFriday = new Date(`${date}T00:00:00.000Z`).getUTCDay() === 5;
+  const todays = useApi(() => api.bookings(date), [date]);
+  const todaysCount =
+    name.trim().length >= 3
+      ? (todays.data ?? []).filter((b) => b.date === date && b.state === "BOOKED" && b.who.toLowerCase() === name.trim().toLowerCase()).length
+      : 0;
   const [staff, setStaff] = useState<StaffDTO | null>(null);
   const [meKnown, setMeKnown] = useState(false);
   useEffect(() => {
@@ -39,27 +51,45 @@ export default function Courts() {
   // a booking runs a full hour, so it also blocks the starts either side of it
   const taken = avail.data?.taken ?? [];
   const free = (t: number) =>
-    !taken.some((b) => Math.abs(b - t) < 60) && (date !== today || t + 60 > istMinutesNow());
+    !taken.some((b) => Math.abs(b - t) < 60) && (date !== today || t > istMinutesNow());
   const price = slot === null || !court ? null : member ? (court.sport === "Cricket" ? member.cricketPrice : member.tennisPrice) : court.walkinPrice;
 
   useEffect(() => {
     setSlot(null);
+    setSocial(false);
   }, [courtId, date]);
 
   async function book() {
-    if (slot === null || !name.trim() || !court) return;
+    if (slot === null || !name.trim() || !court || courtId === null) return;
     setBusy(true);
     setMsg(null);
     try {
-      const b = await api.createBooking({ courtId, date, start: slot, name: name.trim() });
-      setMsg({
-        ok: true,
-        text: `Booked. ${court.name}, ${date === today ? "today" : date} at ${fmtTime(slot)}${b.price ? `, ${inr(b.price)} at the desk` : ", covered by your plan"}.`,
-      });
+      if (social) {
+        // FRIDAY_SOCIAL is not in lib/api.ts createBooking yet (another
+        // agent owns that client), so social bookings post directly.
+        const res = await fetch("/api/v1/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courtId, date, start: slot, name: name.trim(), type: "FRIDAY_SOCIAL" }),
+        });
+        const data = (await res.json().catch(() => null)) as { error?: string; price?: number } | null;
+        if (!res.ok) throw new Error(data?.error ?? "Booking failed. Try again.");
+        setMsg({
+          ok: true,
+          text: `Friday Social Play booked. ${court.name}, ${date === today ? "today" : date} at ${fmtTime(slot)} — shared court, does not count toward the 2-a-day limit${data?.price ? `, ${inr(data.price)} at the desk` : ", covered by your plan"}.`,
+        });
+      } else {
+        const b = await api.createBooking({ courtId, date, start: slot, name: name.trim() });
+        setMsg({
+          ok: true,
+          text: `Booked. ${court.name}, ${date === today ? "today" : date} at ${fmtTime(slot)}${b.price ? `, ${inr(b.price)} at the desk` : ", covered by your plan"}.`,
+        });
+      }
       setSlot(null);
       void avail.reload();
+      void todays.reload();
     } catch (e) {
-      setMsg({ ok: false, text: e instanceof ApiClientError ? e.message : "Booking failed. Try again." });
+      setMsg({ ok: false, text: e instanceof ApiClientError || e instanceof Error ? e.message : "Booking failed. Try again." });
       void avail.reload();
     } finally {
       setBusy(false);
@@ -104,8 +134,18 @@ export default function Courts() {
             </div>
             <div style={{ maxWidth: 300 }}>
               <label htmlFor="date">Date</label>
-              <input id="date" type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} />
+              <input id="date" type="date" value={date} min={today} max={addDaysISO(today, 30)} onChange={(e) => setDate(e.target.value)} />
             </div>
+            {isFriday && (
+              <div style={{ marginTop: 14 }}>
+                <button className="btn btn-quiet" aria-pressed={social} onClick={() => setSocial(!social)}>
+                  {social ? "Friday Social Play on — shared court" : "Friday Social Play — share the court"}
+                </button>
+                <p className="muted" style={{ marginTop: 6, maxWidth: 520 }}>
+                  Fridays only: many members share one court, and social play does not count toward the 2-a-day limit.
+                </p>
+              </div>
+            )}
             {avail.loading ? (
               <div style={{ marginTop: 12 }}><Loading rows={3} /></div>
             ) : avail.error ? (
@@ -113,7 +153,7 @@ export default function Courts() {
             ) : (
               <div className="slots" role="group" aria-label="Start times">
                 {starts.map((t) => (
-                  <button key={t} className={`slot num${date === today && t + 60 <= istMinutesNow() ? " past" : ""}`} disabled={!free(t)} aria-pressed={slot === t} onClick={() => setSlot(t)}>
+                  <button key={t} className={`slot num${date === today && t <= istMinutesNow() ? " past" : ""}`} disabled={!free(t)} aria-pressed={slot === t} onClick={() => setSlot(t)}>
                     {fmtTime(t)}
                   </button>
                 ))}
@@ -151,6 +191,13 @@ export default function Courts() {
                 No member found under that name. Walk-in rate applies.
               </p>
             )}
+            {name.trim().length >= 3 && todays.data && (
+              <p className="muted" style={{ marginTop: 8 }} role="status">
+                {todaysCount === 0
+                  ? `${name.trim()} has no bookings on ${date === today ? "today" : date} yet.`
+                  : `${name.trim()} already has ${todaysCount} booking${todaysCount > 1 ? "s" : ""} on ${date === today ? "today" : date} — two a day at most.`}
+              </p>
+            )}
 
             {msg && <div className={`notice ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</div>}
 
@@ -168,7 +215,7 @@ export default function Courts() {
               )}
             </p>
               <button className="btn btn-ink" disabled={!canBook || slot === null || !name.trim() || busy} onClick={book}>
-                {!canBook ? "Front desk only — sign in to book" : busy ? "Booking..." : slot === null || !court ? "Pick a slot first" : `Book ${court.name} at ${fmtTime(slot)}`}
+                {!canBook ? "Front desk only — sign in to book" : busy ? "Booking..." : slot === null || !court ? "Pick a slot first" : social ? `Book Social Play, ${court.name} at ${fmtTime(slot)}` : `Book ${court.name} at ${fmtTime(slot)}`}
               </button>
             </div>
           </div>
