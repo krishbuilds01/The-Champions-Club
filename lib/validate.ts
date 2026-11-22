@@ -37,11 +37,6 @@ export const availPlanInput = z.object({
   dateOfBirth: z.string().optional(),
 });
 
-export const trialInput = bookingInput.extend({
-  phone: phone,
-  type: z.enum(["TRIAL"]).optional().default("TRIAL"),
-});
-
 export const memberBookingInput = bookingInput
   .pick({ courtId: true, date: true, start: true })
   .extend({ type: z.enum(["REGULAR", "FRIDAY_SOCIAL"]).optional().default("REGULAR") });
@@ -172,13 +167,6 @@ export const quoteInput = z.object({
   planCode: z.string().min(1),
   amount: z.number().int().positive("The quote needs an amount").max(10000000),
   note: z.string().trim().max(300).optional().default(""),
-});
-
-export const staffInput = z.object({
-  name: z.string().trim().min(2, "The staff member needs a name").max(80),
-  email: z.string().trim().email("That email does not look right").max(120),
-  password: z.string().min(8, "Password needs at least 8 characters").max(200),
-  role: z.enum(["OWNER", "STAFF", "FRONT_DESK", "BAR", "SHOP"]),
 });
 
 export const loginInput = z.object({

@@ -3,9 +3,6 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import {
   getGoogleRedirectUri,
-  safeNextPath,
-  setSessionCookie,
-  tokenForStaff,
   signMemberToken,
   setMemberSessionCookie,
 } from "@/lib/auth";

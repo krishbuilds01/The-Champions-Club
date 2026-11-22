@@ -67,16 +67,6 @@ export async function takenStarts(
 
 // The public court sheet for one day: who is on court and when. Names
 // were always shown on the club board; phone numbers never leave here.
-export async function listSchedule(date: string): Promise<BookingDTO[]> {
-  if (!isISODate(date)) throw badRequest("Date must be YYYY-MM-DD");
-  const rows = await db.booking.findMany({
-    where: { date: new Date(`${date}T00:00:00.000Z`), state: "BOOKED" },
-    include: { court: true },
-    orderBy: { start: "asc" },
-  });
-  return rows.map((b) => ({ ...toBookingDTO(b), phone: "" }));
-}
-
 export async function listBookings(date?: string, state?: string): Promise<BookingDTO[]> {
   if (state !== undefined && state !== "BOOKED" && state !== "CANCELLED")
     throw badRequest("state must be BOOKED or CANCELLED");
