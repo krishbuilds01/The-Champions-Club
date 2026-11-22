@@ -102,7 +102,11 @@ export default function Home() {
   return (
     <div className="make-landing min-h-screen bg-[#f2f0e8] text-[#163021]">
       <main>
-        <section id="home" className="relative flex min-h-[760px] items-end overflow-hidden bg-[#10251a] text-white -mt-[74px] pt-36 lg:min-h-screen">
+        <section
+          id="home"
+          className="relative flex min-h-[100dvh] w-full items-end overflow-hidden bg-[#10251a] text-white -mt-[74px] pt-28 pb-12 sm:pt-36 sm:pb-16 lg:pb-20"
+          style={{ minHeight: "100dvh" }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/hero.jpg" alt="Tennis player on court at Champions Club" className="absolute inset-0 h-full w-full object-cover object-[62%_center]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,28,17,.94)_0%,rgba(9,30,18,.74)_35%,rgba(9,29,18,.1)_70%),linear-gradient(0deg,rgba(7,23,14,.72)_0%,transparent_45%)]" />
