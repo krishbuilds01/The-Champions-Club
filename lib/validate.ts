@@ -171,11 +171,6 @@ export const loginInput = z.object({
   password: z.string().min(1, "Password is missing"),
 });
 
-<<<<<<< HEAD
-export const pinInput = z.object({
-  pin: z.string().regex(/^\d{4}$/, "PIN is 4 digits"),
-});
-
 export const adjustStockInput = z.object({
   productId: z.number().int().positive(),
   delta: z.number().int(),
@@ -188,5 +183,4 @@ export const productCreateInput = z.object({
   lowAt: z.number().int().min(0).optional().default(5),
   category: z.enum(["GEAR", "BAR"]),
 });
-=======
->>>>>>> 9119cdb312dbba6b7a24f12c1717680edfdaba51
+
