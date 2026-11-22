@@ -31,8 +31,9 @@ export default async function MemberHome({ searchParams }: { searchParams?: Prom
   return (
     <main className="wrap page">
       <div className="page-head">
+        <p className="page-eyebrow">Members</p>
         <h1 className="page-title">My club</h1>
-        <p className="sub">Your plan, your bookings, your orders.</p>
+        <p className="sub">Welcome back, {m.name.split(" ")[0]} — your plan, your bookings and your orders.</p>
       </div>
       <MemberBar name={m.name} plan={m.plan} />
 

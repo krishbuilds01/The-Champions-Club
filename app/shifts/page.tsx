@@ -67,17 +67,18 @@ export default function Shifts() {
 
   return (
     <main className="wrap page">
-      <div className="page-head">
-        <p className="page-eyebrow">Front desk</p>
-        <h1 className="page-title">Staff rota</h1>
-        <p className="sub">Who works which half of the day, week by week. Morning and evening — that is the whole system.</p>
-      </div>
-
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
-        <button className="btn btn-quiet" onClick={() => setWeekStart(addDaysISO(weekStart, -7))}>Previous week</button>
-        <button className="btn btn-quiet" onClick={() => setWeekStart(mondayOf(todayISO()))}>This week</button>
-        <button className="btn btn-quiet" onClick={() => setWeekStart(addDaysISO(weekStart, 7))}>Next week</button>
-        <span className="muted">{dayLabel(weekStart)} — {dayLabel(addDaysISO(weekStart, 6))}</span>
+      <div className="head-row">
+        <div className="page-head">
+          <p className="page-eyebrow">Front desk</p>
+          <h1 className="page-title">Staff rota</h1>
+          <p className="sub">Who works which half of the day, week by week. Morning and evening — that is the whole system.</p>
+        </div>
+        <div className="head-actions">
+          <button className="btn btn-quiet btn-small" onClick={() => setWeekStart(addDaysISO(weekStart, -7))}>Previous week</button>
+          <button className="btn btn-quiet btn-small" onClick={() => setWeekStart(mondayOf(todayISO()))}>This week</button>
+          <button className="btn btn-quiet btn-small" onClick={() => setWeekStart(addDaysISO(weekStart, 7))}>Next week</button>
+          <span className="muted">{dayLabel(weekStart)} — {dayLabel(addDaysISO(weekStart, 6))}</span>
+        </div>
       </div>
 
       {shifts.loading || roster.loading ? (

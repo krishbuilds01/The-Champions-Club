@@ -61,10 +61,27 @@ export default function Reports() {
 
   return (
     <main className="wrap page">
-      <div className="page-head">
-        <p className="page-eyebrow">The club</p>
-        <h1 className="page-title">Tax report</h1>
-        <p className="sub">What was billed, what tax was charged, and what was already deducted from staff pay.</p>
+      <div className="head-row">
+        <div className="page-head">
+          <p className="page-eyebrow">The club</p>
+          <h1 className="page-title">Tax report</h1>
+          <p className="sub">What was billed, what tax was charged, and what was already deducted from staff pay.</p>
+        </div>
+        {!rep.loading && !rep.error && (
+          <div className="head-actions">
+            <div>
+              <label htmlFor="r-month">Month</label>
+              <input
+                id="r-month"
+                type="month"
+                value={month}
+                onChange={(e) => e.target.value && setMonth(e.target.value)}
+                max={todayISO().slice(0, 7)}
+              />
+            </div>
+            <button className="btn btn-quiet" onClick={exportCsv}>Export CSV</button>
+          </div>
+        )}
       </div>
 
       {rep.loading ? (
@@ -73,19 +90,6 @@ export default function Reports() {
         <ErrorBox message={rep.error} onRetry={rep.reload} />
       ) : (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}>
-              Month
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => e.target.value && setMonth(e.target.value)}
-                max={todayISO().slice(0, 7)}
-              />
-            </label>
-            <button className="btn btn-quiet" onClick={exportCsv}>Export CSV</button>
-          </div>
-
           <p className="sub" style={{ marginBottom: 18 }}>
             Window: <span className="num">{d!.from}</span> to <span className="num">{d!.to}</span>
           </p>
@@ -100,11 +104,18 @@ export default function Reports() {
             ))}
           </div>
 
-          <p style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link className="mini-link" href="/invoices">Invoices</Link>
-            <Link className="mini-link" href="/payroll">Payroll</Link>
-            <Link className="mini-link" href="/dashboard">Dashboard</Link>
-          </p>
+          <div className="jump-grid" style={{ marginTop: 24 }}>
+            {[
+              { href: "/invoices", title: "Invoices", note: "Where the billed tax comes from" },
+              { href: "/payroll", title: "Payroll", note: "Where the deductions come from" },
+              { href: "/dashboard", title: "Dashboard", note: "The whole club, today" },
+            ].map((j) => (
+              <Link className="jump-card" href={j.href} key={j.href}>
+                <span><b>{j.title}</b><span>{j.note}</span></span>
+                <span className="j-arrow" aria-hidden="true">→</span>
+              </Link>
+            ))}
+          </div>
         </>
       )}
     </main>

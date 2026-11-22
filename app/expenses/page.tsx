@@ -66,21 +66,32 @@ export default function Expenses() {
           {list.length === 0 ? (
             <div style={{ marginTop: 20 }}><Empty>No expenses recorded yet. Add the first one below.</Empty></div>
           ) : (
-            <div className="ledger-wrap" style={{ marginTop: 20 }}>
-              <table className="ledger">
-                <thead><tr><th>What</th><th className="hide-m">Category</th><th>Date</th><th className="r">Amount</th></tr></thead>
-                <tbody>
-                  {list.map((e) => (
-                    <tr key={e.id}>
-                      <td style={{ fontWeight: 500 }}>{e.title}{e.note ? <span className="muted"> — {e.note}</span> : null}</td>
-                      <td className="hide-m">{e.category}</td>
-                      <td className="num">{e.spentOn}</td>
-                      <td className="r num">{inr(e.amount)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {[...new Set(list.map((e) => e.spentOn.slice(0, 7)))].map((mk) => {
+                const rows = list.filter((e) => e.spentOn.startsWith(mk));
+                const label = new Date(`${mk}-02T00:00:00Z`).toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "UTC" });
+                return (
+                  <div key={mk}>
+                    <h2 className="group-label">{label}<span className="g-count">{rows.length} · {inr(rows.reduce((s, e) => s + e.amount, 0))}</span></h2>
+                    <div className="ledger-wrap">
+                      <table className="ledger">
+                        <thead><tr><th>What</th><th className="hide-m">Category</th><th>Date</th><th className="r">Amount</th></tr></thead>
+                        <tbody>
+                          {rows.map((e) => (
+                            <tr key={e.id}>
+                              <td style={{ fontWeight: 500 }}>{e.title}{e.note ? <span className="muted"> — {e.note}</span> : null}</td>
+                              <td className="hide-m"><span className="tag">{e.category}</span></td>
+                              <td className="num">{e.spentOn}</td>
+                              <td className="r num">{inr(e.amount)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
           )}
 
           <section className="block">
