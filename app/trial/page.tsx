@@ -41,7 +41,7 @@ export default function Trial() {
   const avail = useApi(() => api.availability(f.courtId, f.date), [f.courtId, f.date]);
   const taken = avail.data?.taken ?? [];
   const freeSlots = starts.filter(
-    (t) => !taken.some((b) => Math.abs(b - t) < 60) && (f.date !== today || t > istMinutesNow()),
+    (t) => !taken.some((b) => Math.abs(b.start - t) < 60) && (f.date !== today || t > istMinutesNow()),
   );
   const court = courts.data?.find((c) => c.id === f.courtId);
 
@@ -93,7 +93,7 @@ export default function Trial() {
   }
 
   return (
-    <main className="wrap page" style={{ maxWidth: 680 }}>
+    <main className="wrap page" style={{ maxWidth: 1080 }}>
       <div className="page-head">
         <p className="page-eyebrow">Play</p>
         <h1 className="page-title">Book a free trial</h1>
@@ -104,7 +104,7 @@ export default function Trial() {
       ) : courts.error || avail.error ? (
         <ErrorBox message={courts.error || avail.error} onRetry={() => { void courts.reload(); void avail.reload(); }} />
       ) : (
-        <>
+        <div className="work-grid even">
         <div className="panel panel-main">
         <div className="form-grid">
           <div>
@@ -151,7 +151,7 @@ export default function Trial() {
           </div>
         </div>
         </div>
-          <div className="panel" style={{ marginTop: 16 }}>
+          <div className="panel">
             <h3 style={{ marginBottom: 6 }}>Ask the club anything</h3>
             <p className="muted" style={{ marginBottom: 14 }}>Membership, courts, coaching, the shop. Your question lands on the front desk&apos;s list, with the name and contact above.</p>
             <div className="form-grid">
@@ -173,7 +173,7 @@ export default function Trial() {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </main>
   );

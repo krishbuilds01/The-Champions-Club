@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   if (!tokenRes.ok) {
     const detail = await tokenRes.text().catch(() => "");
     console.error("google token exchange failed", tokenRes.status, detail.slice(0, 300));
-    return back("/login?error=gtoken");
+    return back("/login?error=google");
   }
   const { access_token } = await tokenRes.json();
 

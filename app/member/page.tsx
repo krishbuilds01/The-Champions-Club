@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { currentMember } from "@/lib/auth";
-import { memberHome } from "@/lib/services/members";
+import { memberHome, renewMember } from "@/lib/services/members";
 import { fmtTime, inr } from "@/lib/format";
 import MemberBar from "@/components/MemberBar";
 import MemberActions from "@/components/MemberActions";
@@ -8,11 +9,24 @@ import MemberActions from "@/components/MemberActions";
 // The member's own page: plan and expiry up top, then their bookings,
 // shop orders and bar tabs. Reads are server-rendered off the member
 // record; booking and ordering post back to the member routes.
-export default async function MemberHome() {
+// Renewing from the portal is a server action, not a fetch: the page
+// is server-rendered and the member's identity comes from the session.
+// It calls the same renewMember service as the desk and member routes.
+async function renewPlan() {
+  "use server";
+  const session = await currentMember();
+  if (!session) redirect("/member/login");
+  await renewMember(session.id);
+  revalidatePath("/member");
+  redirect("/member?renewed=1");
+}
+
+export default async function MemberHome({ searchParams }: { searchParams?: Promise<{ renewed?: string }> }) {
   const session = await currentMember();
   if (!session) redirect("/member/login");
   const home = await memberHome(session.id);
   const m = home.member;
+  const renewed = (await searchParams)?.renewed === "1";
 
   return (
     <main className="wrap page">
@@ -44,6 +58,15 @@ export default async function MemberHome() {
               : "Your plan runs out soon — a quick word with the front desk keeps everything running."}
           </p>
         )}
+        {renewed && (
+          <p className="notice ok" role="status" style={{ marginTop: 14 }}>
+            Renewed — your plan now runs until {m.expiresOn}.
+          </p>
+        )}
+        <form action={renewPlan} style={{ marginTop: 14 }}>
+          <button className="btn btn-ink" type="submit">Renew my plan</button>
+        </form>
+        <p className="muted" style={{ marginTop: 8 }}>Renews from the later of today and your current end date — you never lose days.</p>
       </section>
 
       <MemberActions />

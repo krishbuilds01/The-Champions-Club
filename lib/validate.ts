@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { badRequest } from "./errors";
+import { isISODate } from "./format";
 
 // Every API input is parsed here, in one place. Handlers never read raw
 // request bodies.
@@ -67,10 +68,16 @@ export const orderInput = z.object({
 
 export const memberOrderInput = orderInput.pick({ items: true, payMethod: true, fulfilment: true, address: true, payOnline: true });
 
+export const renewInput = z.object({
+  payMethod: z.enum(["CASH", "CARD", "UPI", "ONLINE"]).optional().default("CASH"),
+});
+
 export const invoiceInput = z.object({
   billedTo: z.string().trim().min(2, "Who is this bill for?").max(80),
   detail: z.string().trim().max(200).optional().default(""),
   amount: z.number().int().positive("The invoice needs an amount").max(100000000),
+  // Optional tax percent; the service computes the tax amount from it.
+  taxRate: z.number().int().min(0).max(100).optional(),
 });
 
 export const expenseInput = z.object({
@@ -87,6 +94,18 @@ export const payrollInput = z.object({
   salary: z.number().int().positive("Salary is missing").max(100000000),
   leaveDays: z.number().int().min(0).max(31).optional().default(0),
   tax: z.number().int().min(0).max(100000000).optional().default(0),
+});
+
+export const leaveInput = z.object({
+  staffId: z.number().int().positive(),
+  from: z.string().refine((d) => isISODate(d), "That start date is not a real date"),
+  to: z.string().refine((d) => isISODate(d), "That end date is not a real date"),
+  type: z.enum(["ANNUAL", "SICK", "UNPAID", "OTHER"]).optional().default("ANNUAL"),
+  reason: z.string().trim().max(200).optional().default(""),
+});
+
+export const leaveDecisionInput = z.object({
+  status: z.enum(["APPROVED", "REJECTED"]),
 });
 
 export const shiftInput = z.object({
@@ -138,6 +157,13 @@ export const quoteInput = z.object({
   planCode: z.string().min(1),
   amount: z.number().int().positive("The quote needs an amount").max(10000000),
   note: z.string().trim().max(300).optional().default(""),
+});
+
+export const staffInput = z.object({
+  name: z.string().trim().min(2, "The staff member needs a name").max(80),
+  email: z.string().trim().email("That email does not look right").max(120),
+  password: z.string().min(8, "Password needs at least 8 characters").max(200),
+  role: z.enum(["OWNER", "STAFF", "FRONT_DESK", "BAR", "SHOP"]),
 });
 
 export const loginInput = z.object({

@@ -5,11 +5,21 @@ import { jwtVerify } from "jose";
 // member sign-in. This checks the session token's signature, expiry
 // and kind at the edge; API handlers re-check against the database
 // on every call.
-const secret = new TextEncoder().encode(process.env.AUTH_SECRET ?? "dev-only-secret-change-me");
-const STAFF_PAGES = ["/dashboard", "/bookings", "/members", "/bar", "/enquiries", "/invoices", "/expenses", "/payroll", "/shifts"];
+// No fallback: without AUTH_SECRET no token can be trusted, so a
+// missing secret must fail loudly instead of verifying against a
+// secret anyone can guess.
+function getSecret(): Uint8Array {
+  const s = process.env.AUTH_SECRET;
+  if (!s) throw new Error("AUTH_SECRET is not set");
+  return new TextEncoder().encode(s);
+}
+const STAFF_PAGES = ["/dashboard", "/bookings", "/members", "/bar", "/enquiries", "/invoices", "/expenses", "/payroll", "/shifts", "/staff", "/orders", "/leave", "/reports"];
 
 async function kindOf(token: string | undefined): Promise<string | null> {
   if (!token) return null;
+  // Resolved outside the try on purpose: a missing secret throws
+  // instead of being swallowed into a quiet login redirect.
+  const secret = getSecret();
   try {
     const { payload } = await jwtVerify(token, secret);
     return typeof payload.kind === "string" ? payload.kind : "staff";
@@ -40,4 +50,4 @@ export async function middleware(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-export const config = { matcher: ["/dashboard/:path*", "/bookings/:path*", "/members/:path*", "/bar/:path*", "/enquiries/:path*", "/invoices/:path*", "/expenses/:path*", "/payroll/:path*", "/shifts/:path*", "/member", "/member/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/bookings/:path*", "/members/:path*", "/bar/:path*", "/enquiries/:path*", "/invoices/:path*", "/expenses/:path*", "/payroll/:path*", "/shifts/:path*", "/staff/:path*", "/orders/:path*", "/leave/:path*", "/reports/:path*", "/member", "/member/:path*"] };

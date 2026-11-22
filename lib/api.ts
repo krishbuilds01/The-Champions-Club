@@ -1,4 +1,4 @@
-import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, ExpenseDTO, ExpiringDTO, InvoiceDTO, MemberDTO, MemberHomeDTO, MemberSessionDTO, OrderDTO, PayrollDTO, PlanDTO, ProductDTO, ShiftDTO, StaffDTO, StaffRosterDTO, TabDTO } from "./types";
+import type { BookingDTO, CourtDTO, DashboardDTO, EnquiryDTO, ExpenseDTO, ExpiringDTO, InvoiceDTO, LeaveDTO, MemberDTO, MemberHomeDTO, MemberSessionDTO, OrderDTO, PayrollDTO, PlanDTO, ProductDTO, ShiftDTO, StaffDTO, StaffRosterDTO, TabDTO, TaxSummaryDTO } from "./types";
 
 // The web app's one door to the API. Every page fetches through here, so
 // error handling and the base path live in exactly one place. A mobile
@@ -36,7 +36,7 @@ export const api = {
   products: (category?: "GEAR" | "BAR") =>
     call<ProductDTO[]>(`/products${category ? `?category=${category}` : ""}`),
   availability: (courtId: number, date: string) =>
-    call<{ taken: number[] }>(`/availability?courtId=${courtId}&date=${date}`),
+    call<{ taken: { start: number; type: "REGULAR" | "TRIAL" | "FRIDAY_SOCIAL" }[] }>(`/availability?courtId=${courtId}&date=${date}`),
   schedule: (date: string) => call<BookingDTO[]>(`/schedule?date=${date}`),
   lookupMember: (name: string) =>
     call<{
@@ -65,6 +65,7 @@ export const api = {
   expiringMembers: () => call<ExpiringDTO[]>("/members/expiring"),
   createMember: (input: { name: string; phone?: string; email?: string; planCode: string; dateOfBirth?: string }) =>
     post<MemberDTO>("/members", input),
+  renewMember: (id: number) => post<MemberDTO>(`/members/${id}/renew`, {}),
   createOrder: (input: {
     items: { productId: number; qty: number }[];
     name: string;
@@ -74,7 +75,45 @@ export const api = {
     address?: string;
     payOnline?: boolean;
   }) => post<OrderDTO & { razorpayOrderId?: string }>("/orders", input),
-  orders: () => call<OrderDTO[]>("/orders"),
+  orders: (from?: string, to?: string, page?: number) => {
+    const q = new URLSearchParams();
+    if (from) q.set("from", from);
+    if (to) q.set("to", to);
+    if (page) q.set("page", String(page));
+    const s = q.toString();
+    return call<OrderDTO[]>(`/orders${s ? `?${s}` : ""}`);
+  },
+  payOrder: (id: number) => post<OrderDTO>(`/orders/${id}/pay`, {}),
+  adjustStock: (input: { productId: number; delta: number }) =>
+    post<ProductDTO>("/inventory/adjust", input),
+  createProduct: (input: { name: string; price: number; stock?: number; lowAt?: number; category: "GEAR" | "BAR" }) =>
+    post<ProductDTO>("/products", input),
+  restockProduct: (id: number, qty: number, lowAt?: number) =>
+    post<ProductDTO>(`/products/${id}/restock`, { qty, lowAt }),
+  invoices: () => call<InvoiceDTO[]>("/invoices"),
+  createInvoice: (input: { billedTo: string; detail?: string; amount: number; taxRate?: number }) => post<InvoiceDTO>("/invoices", input),
+  taxSummary: (from: string, to: string) => call<TaxSummaryDTO>(`/reports/tax?from=${from}&to=${to}`),
+  payInvoice: (id: number) => post<InvoiceDTO>(`/invoices/${id}/pay`, {}),
+  expenses: () => call<ExpenseDTO[]>("/expenses"),
+  createExpense: (input: { title: string; category?: string; amount: number; spentOn: string; note?: string }) => post<ExpenseDTO>("/expenses", input),
+  payroll: () => call<PayrollDTO[]>("/payroll"),
+  createPayroll: (input: { staffName: string; month: string; salary: number; leaveDays?: number; tax?: number }) => post<PayrollDTO>("/payroll", input),
+  payPayroll: (id: number) => post<PayrollDTO>(`/payroll/${id}/pay`, {}),
+  staffRoster: () => call<StaffRosterDTO[]>("/staff"),
+  createStaff: (input: { name: string; email: string; password: string; role: StaffDTO["role"] }) =>
+    post<StaffRosterDTO>("/staff", input),
+  removeStaff: (id: number) => call<{ ok: true }>(`/staff/${id}`, { method: "DELETE" }),
+  shifts: (from: string, to: string) => call<ShiftDTO[]>(`/shifts?from=${from}&to=${to}`),
+  assignShift: (input: { staffId: number; date: string; part: "MORNING" | "EVENING" }) => post<ShiftDTO>("/shifts", input),
+  removeShift: (id: number) => call<{ ok: true }>(`/shifts/${id}`, { method: "DELETE" }),
+  leaves: () => call<LeaveDTO[]>("/leave"),
+  requestLeave: (input: { staffId: number; from: string; to: string; type: LeaveDTO["type"]; reason?: string }) =>
+    post<LeaveDTO>("/leave", input),
+  decideLeave: (id: number, status: "APPROVED" | "REJECTED") =>
+    call<LeaveDTO>(`/leave/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) }),
+  payConfig: () => call<{ enabled: boolean; keyId: string | null }>("/payments/config"),
+  confirmPayment: (id: number, proof: { razorpayOrderId: string; paymentId: string; signature: string }) =>
+    post<OrderDTO>(`/orders/${id}/pay-confirm`, proof),
   tabs: () => call<TabDTO[]>("/tabs"),
   openTab: (input: { who: string; tableNo?: number }) => post<TabDTO>("/tabs", input),
   addTabItems: (id: number, items: { productId: number; qty: number }[]) =>
@@ -96,5 +135,6 @@ export const api = {
   memberLogout: () => post<{ ok: boolean }>("/member/logout"),
   memberMe: () => call<MemberHomeDTO>("/member/me"),
   memberBook: (input: { courtId: number; date: string; start: number }) => post<BookingDTO>("/member/bookings", input),
+  memberRenew: () => post<MemberDTO>("/member/renew", {}),
   memberOrder: (input: { items: { productId: number; qty: number }[]; payMethod: "CASH" | "CARD" | "UPI"; fulfilment?: "PICKUP" | "DELIVERY"; address?: string; payOnline?: boolean }) => post<OrderDTO & { razorpayOrderId?: string }>("/member/orders", input),
 };

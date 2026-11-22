@@ -21,7 +21,7 @@ export default function MemberActions() {
   const [slot, setSlot] = useState<number | null>(null);
   const avail = useApi(() => api.availability(courtId, date), [courtId, date]);
   const taken = avail.data?.taken ?? [];
-  const free = (t: number) => !taken.some((b) => Math.abs(b - t) < 60) && (date !== today || t + 60 > istMinutesNow());
+  const free = (t: number) => !taken.some((b) => Math.abs(b.start - t) < 60) && (date !== today || t + 60 > istMinutesNow());
   const freeSlots = allStarts().filter(free);
   useEffect(() => {
     if (freeSlots.length && (slot === null || !freeSlots.includes(slot))) setSlot(freeSlots[0]);

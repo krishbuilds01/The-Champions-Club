@@ -167,6 +167,7 @@ export default function Shop() {
         <Empty>The shelf is empty right now. New stock lands at the front desk first.</Empty>
       ) : (
         <>
+          <div className="work-grid">
           <div className="shop-grid">
             {gear.map((p) => (
               <div className={`product-card${p.stock === 0 ? " out" : ""}${(cart[p.id] ?? 0) > 0 ? " picked" : ""}`} key={p.id}>
@@ -196,8 +197,9 @@ export default function Shop() {
             ))}
           </div>
 
-          <div className="panel panel-main" style={{ marginTop: 24 }}>
-          <div className="field-row" style={{ maxWidth: 640 }}>
+          <div className="panel work-side">
+          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", marginBottom: 14 }}>Your order</h3>
+          <div className="form-grid">
             <div>
               <label htmlFor="s-name">Your name</label>
               <input id="s-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Members: use your registered name" />
@@ -239,26 +241,7 @@ export default function Shop() {
           </div>
 
           {msg && <div className={`notice ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</div>}
-          </div>
-
-          {staffOrders && staffOrders.length > 0 && (
-            <section className="block">
-              <div className="sec-head"><h2>Today&apos;s orders (staff)</h2></div>
-              <div className="rows">
-                {staffOrders.map((o) => (
-                  <div className="row-item" key={o.id}>
-                    <div className="row-main">
-                      <p className="row-name">{o.name} <span className="muted" style={{ fontWeight: 400 }}>{o.phone}</span>{o.fulfilment === "DELIVERY" && <span className="tag" style={{ marginLeft: 8 }}>Delivery</span>}</p>
-                      <p className="muted">{o.items.map((i) => `${i.qty} × ${i.name}`).join(", ")}{o.fulfilment === "DELIVERY" && o.address ? ` · ${o.address}` : ""}</p>
-                    </div>
-                    <span className="num">{inr(o.total)} · {o.payMethod === "ONLINE" ? (o.payState === "PAID" ? "Online, paid" : "Online, pending") : o.payMethod}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <div className="summary">
+<div className="summary">
             <p className="s-lines">
               {count === 0 ? (
                 "Nothing picked yet."
@@ -284,6 +267,26 @@ export default function Shop() {
               </button>
             )}
           </div>
+          </div>
+          </div>
+
+          {staffOrders && staffOrders.length > 0 && (
+            <section className="block">
+              <div className="sec-head"><h2>Today&apos;s orders (staff)</h2></div>
+              <div className="rows">
+                {staffOrders.map((o) => (
+                  <div className="row-item" key={o.id}>
+                    <div className="row-main">
+                      <p className="row-name">{o.name} <span className="muted" style={{ fontWeight: 400 }}>{o.phone}</span>{o.fulfilment === "DELIVERY" && <span className="tag" style={{ marginLeft: 8 }}>Delivery</span>}</p>
+                      <p className="muted">{o.items.map((i) => `${i.qty} × ${i.name}`).join(", ")}{o.fulfilment === "DELIVERY" && o.address ? ` · ${o.address}` : ""}</p>
+                    </div>
+                    <span className="num">{inr(o.total)} · {o.payMethod === "ONLINE" ? (o.payState === "PAID" ? "Online, paid" : "Online, pending") : o.payMethod}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
         </>
       )}
       </div>

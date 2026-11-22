@@ -37,7 +37,7 @@ export default function Courts() {
   const todays = useApi(() => api.bookings(date), [date]);
   const todaysCount =
     name.trim().length >= 3
-      ? (todays.data ?? []).filter((b) => b.date === date && b.state === "BOOKED" && b.who.toLowerCase() === name.trim().toLowerCase()).length
+      ? (todays.data ?? []).filter((b) => b.date === date && b.state === "BOOKED" && b.type === "REGULAR" && b.who.toLowerCase() === name.trim().toLowerCase()).length
       : 0;
   const [staff, setStaff] = useState<StaffDTO | null>(null);
   const [meKnown, setMeKnown] = useState(false);
@@ -48,10 +48,13 @@ export default function Courts() {
       .finally(() => setMeKnown(true));
   }, []);
   const canBook = !!staff && (staff.role === "OWNER" || staff.role === "FRONT_DESK" || staff.role === "STAFF");
-  // a booking runs a full hour, so it also blocks the starts either side of it
+  // a booking runs a full hour, so it also blocks the starts either side of
+  // it — except Friday Social bookings, which share the court: in social
+  // mode only non-social bookings block, matching the server rule.
   const taken = avail.data?.taken ?? [];
   const free = (t: number) =>
-    !taken.some((b) => Math.abs(b - t) < 60) && (date !== today || t > istMinutesNow());
+    !taken.some((b) => Math.abs(b.start - t) < 60 && (social || b.type !== "FRIDAY_SOCIAL")) &&
+    (date !== today || t > istMinutesNow());
   const price = slot === null || !court ? null : member ? (court.sport === "Cricket" ? member.cricketPrice : member.tennisPrice) : court.walkinPrice;
 
   useEffect(() => {
@@ -109,6 +112,7 @@ export default function Courts() {
       ) : courts.error ? (
         <ErrorBox message={courts.error} onRetry={courts.reload} />
       ) : (
+        <div className="work-grid">
         <div className="panel panel-main">
           <div className="step">
             <div className="step-head">
@@ -160,13 +164,15 @@ export default function Courts() {
               </div>
             )}
           </div>
+        </div>
 
-          <div className="step">
+        <div className="panel work-side">
+          <div>
             <div className="step-head">
               <span className="step-n">3</span>
               <h3>Your details</h3>
-              <span className="step-hint">Members: your registered name gets your plan price</span>
             </div>
+            <p className="muted" style={{ marginBottom: 12 }}>Members: your registered name gets your plan price.</p>
             {!meKnown ? null : !canBook ? (
               <p className="muted" style={{ maxWidth: 520 }}>
                 Bookings are made at the front desk, so this page shows live availability for everyone.
@@ -174,7 +180,7 @@ export default function Courts() {
                 {staff ? "." : <> or <Link className="text-link" href="/login">sign in as staff</Link> to book.</>}
               </p>
             ) : (
-            <div style={{ maxWidth: 420 }}>
+            <div>
               <label htmlFor="name">Your name</label>
               <input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Members: your registered name" />
             </div>
@@ -219,6 +225,7 @@ export default function Courts() {
               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 

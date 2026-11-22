@@ -21,7 +21,6 @@ export default function Login() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     if (q.get("error") === "notstaff") setErr("That Google account is not a club account.");
-    else if (q.get("error") === "gtoken") setErr("Google token exchange failed. Check client secret or try again.");
     else if (q.get("error") === "gstate") setErr("Google session expired. Try signing in again.");
     else if (q.get("error") === "ginfo" || q.get("error") === "gemail") setErr("Could not retrieve verified email from Google.");
     else if (q.get("error") === "google") setErr("Google sign-in did not work. Try again, or use your password.");
@@ -98,10 +97,10 @@ export default function Login() {
           </div>
           <p className="demo-creds">owner@champions.club · champions — the rest use demo1234</p>
         </div>
-      </div>
-      <p className="member-link">
+        <p className="member-link" style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 2 }}>
         A club member? <Link href="/member/login">Member sign in</Link>
       </p>
+      </div>
     </main>
   );
 }

@@ -70,9 +70,22 @@ export type InvoiceDTO = {
   billedTo: string;
   detail: string;
   amount: number;
+  taxRate: number | null;
+  taxAmount: number | null;
   status: "UNPAID" | "PAID";
   issuedOn: string;
   paidAt: string | null;
+};
+
+export type TaxSummaryDTO = {
+  from: string;
+  to: string;
+  invoiced: number;
+  invoiceCount: number;
+  invoiceTax: number;
+  payrollTax: number;
+  payrollCount: number;
+  netTax: number;
 };
 
 export type ExpenseDTO = {
@@ -96,6 +109,21 @@ export type PayrollDTO = {
 };
 
 export type StaffRosterDTO = { id: number; name: string; role: string };
+
+export type LeaveDTO = {
+  id: number;
+  staffId: number;
+  staffName: string;
+  role: string;
+  fromDate: string;
+  toDate: string;
+  type: "ANNUAL" | "SICK" | "UNPAID" | "OTHER";
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  decidedBy: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+};
 
 export type ShiftDTO = {
   id: number;

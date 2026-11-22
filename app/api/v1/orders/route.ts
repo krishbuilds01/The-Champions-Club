@@ -1,4 +1,5 @@
 import { handle, body } from "@/lib/http";
+import { badRequest } from "@/lib/errors";
 import { requireRole, requireStaff } from "@/lib/auth";
 import { parse, orderInput } from "@/lib/validate";
 import { createOrder, listOrders } from "@/lib/services/sales";

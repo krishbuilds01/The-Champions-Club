@@ -44,13 +44,16 @@ export const toBookingDTO = (b: BookingRow): BookingDTO => ({
 const overlaps = (aStart: number, bStart: number) =>
   aStart < bStart + BOOKING_LEN && bStart < aStart + BOOKING_LEN;
 
-export async function takenStarts(courtId: number, date: string): Promise<number[]> {
+export async function takenStarts(
+  courtId: number,
+  date: string,
+): Promise<{ start: number; type: "REGULAR" | "TRIAL" | "FRIDAY_SOCIAL" }[]> {
   if (!isISODate(date)) throw badRequest("Date must be YYYY-MM-DD");
   const rows = await db.booking.findMany({
     where: { courtId, date: new Date(`${date}T00:00:00.000Z`), state: "BOOKED" },
-    select: { start: true },
+    select: { start: true, type: true },
   });
-  return rows.map((r) => r.start);
+  return rows.map((r) => ({ start: r.start, type: r.type }));
 }
 
 // The public court sheet for one day: who is on court and when. Names

@@ -64,7 +64,7 @@ export async function updateEnquiry(
     throw badRequest("Use the convert action to turn an enquiry into a member");
   // CONVERTED is terminal: once the enquiry became a member, it
   // cannot be moved back to NEW, QUOTED or LOST.
-  if (row.status === "CONVERTED" && row.memberId && input.status && input.status !== "CONVERTED")
+  if (row.status === "CONVERTED" && row.memberId && input.status)
     throw conflict("That enquiry already became a member — it cannot go back");
   if (input.status === undefined && input.note === undefined)
     throw badRequest("Nothing to update");

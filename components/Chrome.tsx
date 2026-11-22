@@ -40,6 +40,7 @@ export default function Chrome({ children }: { children: React.ReactNode }) {
             <Link href="/courts">Courts</Link>
             <Link href="/trial">Free trial</Link>
             <Link href="/#membership">Membership</Link>
+          <Link href="/plans">Plans &amp; prices</Link>
           </nav>
           <nav>
             <Link href="/shop">Shop</Link>
@@ -49,8 +50,19 @@ export default function Chrome({ children }: { children: React.ReactNode }) {
             <nav>
               {staff.role === "OWNER" && <Link href="/dashboard">Dashboard</Link>}
               <Link href="/bookings">Bookings</Link>
+              <Link href="/leave">Leave</Link>
               <Link href="/members">Members</Link>
               <Link href="/enquiries">Enquiries</Link>
+              {staff.role === "OWNER" && <Link href="/orders">Orders</Link>}
+              {staff.role === "OWNER" && <Link href="/reports">Reports</Link>}
+              {staff.role === "OWNER" && <Link href="/staff">Staff</Link>}
+            </nav>
+          ) : barShop ? (
+            <nav>
+              {staff.role === "BAR" && <Link href="/bar">Bar &amp; Café</Link>}
+              {staff.role === "SHOP" && <Link href="/shop">Shop</Link>}
+              {staff.role === "SHOP" && <Link href="/orders">Orders</Link>}
+              <Link href="/shifts">Staff rota</Link>
             </nav>
           ) : barShop ? (
             <nav>
