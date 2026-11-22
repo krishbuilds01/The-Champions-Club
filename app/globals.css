@@ -77,12 +77,19 @@ input:focus, select:focus { border-color: var(--pine); outline: none; box-shadow
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(13, 31, 20, 0.95);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--pine-deep);
   color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+/* Liquid glass effect specifically for the landing page */
+.nav.nav-glass {
+  background: rgba(13, 31, 20, 0.45);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 .nav-in {
   max-width: 1400px;

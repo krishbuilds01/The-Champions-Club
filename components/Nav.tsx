@@ -96,8 +96,10 @@ export default function Nav() {
       ? path === "/"
       : path === href || (href !== "/" && path.startsWith(`${href}/`));
 
+  const isLanding = path === "/";
+
   return (
-    <header className="nav">
+    <header className={`nav ${isLanding ? "nav-glass" : ""}`}>
       <div className="nav-in">
         <Link className="brand" href="/" aria-label="The Champions Club, home">
           <span className="brand-words">

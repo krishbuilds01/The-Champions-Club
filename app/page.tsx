@@ -102,11 +102,11 @@ export default function Home() {
   return (
     <div className="make-landing min-h-screen bg-[#f2f0e8] text-[#163021]">
       <main>
-        <section id="home" className="relative flex min-h-[700px] items-end overflow-hidden bg-[#10251a] text-white lg:min-h-[calc(100vh-74px)]">
+        <section id="home" className="relative flex min-h-[760px] items-end overflow-hidden bg-[#10251a] text-white -mt-[74px] pt-36 lg:min-h-screen">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/hero.jpg" alt="Tennis player on court at Champions Club" className="absolute inset-0 h-full w-full object-cover object-[62%_center]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,28,17,.94)_0%,rgba(9,30,18,.74)_35%,rgba(9,29,18,.1)_70%),linear-gradient(0deg,rgba(7,23,14,.72)_0%,transparent_45%)]" />
-          <div className="relative mx-auto w-full max-w-[1440px] px-5 pb-16 pt-24 sm:px-8 lg:px-12 lg:pb-20">
+          <div className="relative mx-auto w-full max-w-[1440px] px-5 pb-16 pt-36 sm:px-8 lg:px-12 lg:pb-20">
             <div className="max-w-[720px]">
               <div className="mb-7 flex items-center gap-3"><span className="h-px w-10 bg-[#dfff45]" /><span className="text-[10px] font-bold uppercase tracking-[.28em] text-[#dfff45]">Courts · Kitchen · Community</span></div>
               <h1 className="font-display text-[64px] font-bold uppercase leading-[.84] tracking-[-.035em] sm:text-[86px] lg:text-[118px]">Play hard.<br /><span className="text-[#dfff45]">Stay longer.</span></h1>
