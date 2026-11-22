@@ -437,3 +437,15 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 14.5px; backgr
   .work-grid, .work-grid.even { grid-template-columns: 1fr; }
   .work-side { position: static; }
 }
+
+/* ---- Micro-motion: one system, 150–250ms ease-out, transform/opacity only ---- */
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page { animation: page-in 0.22s ease-out; }
+.notice { animation: notice-in 0.18s ease-out both; }
+.nav-mobile { animation: notice-in 0.2s ease-out both; }
+.btn:active { transform: scale(0.98); }
+.slot:active, .seg button:active, .table-tile:active { transform: scale(0.97); }
+.btn, .slot, .table-tile { transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.15s ease-out; }
+.jump-card { transition: box-shadow 0.2s ease-out, border-color 0.2s, transform 0.2s ease-out; }
+.jump-card:hover { transform: translateY(-1px); }
+.product-media img { transition: transform 0.25s ease-out; }
