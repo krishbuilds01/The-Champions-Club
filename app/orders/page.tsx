@@ -45,23 +45,22 @@ export default function OrdersPage() {
 
   return (
     <main className="wrap page">
-      <div className="head-row">
-        <div className="page-head">
-          <p className="page-eyebrow">Shop</p>
-          <h1 className="page-title">Order history</h1>
-          <p className="sub">Every order in the range — what was sold, how it was paid, and what is still owed.</p>
+      <div className="page-head">
+        <p className="page-eyebrow">Shop</p>
+        <h1 className="page-title">Order history</h1>
+        <p className="sub">Every pickup order, newest first — what was sold, how it was paid, and what is still owed.</p>
+      </div>
+
+      <div className="toolbar" style={{ marginBottom: 16 }}>
+        <div>
+          <label htmlFor="or-from">From</label>
+          <input id="or-from" type="date" value={from} max={todayISO()} onChange={(e) => applyRange(e.target.value, to)} />
         </div>
-        <div className="head-actions">
-          <div>
-            <label htmlFor="or-from">From</label>
-            <input id="or-from" type="date" value={from} max={todayISO()} onChange={(e) => applyRange(e.target.value, to)} />
-          </div>
-          <div>
-            <label htmlFor="or-to">To</label>
-            <input id="or-to" type="date" value={to} min={from} max={todayISO()} onChange={(e) => applyRange(from, e.target.value)} />
-          </div>
-          <button className="btn btn-quiet" onClick={() => applyRange(todayISO(), todayISO())}>Today</button>
+        <div>
+          <label htmlFor="or-to">To</label>
+          <input id="or-to" type="date" value={to} min={from} max={todayISO()} onChange={(e) => applyRange(from, e.target.value)} />
         </div>
+        <button className="btn btn-quiet" onClick={() => applyRange(todayISO(), todayISO())}>Today</button>
       </div>
 
       {orders.loading ? (
@@ -73,38 +72,31 @@ export default function OrdersPage() {
       ) : (
         <>
           {msg && <div className={`notice ${msg.ok ? "ok" : "err"}`} role="status" style={{ marginBottom: 14 }}>{msg.text}</div>}
-          {[
-            { title: "Waiting for payment", rows: list.filter((o) => o.payState === "PENDING") },
-            { title: "Paid", rows: list.filter((o) => o.payState !== "PENDING") },
-          ].filter((g) => g.rows.length > 0).map((g) => (
-            <div key={g.title}>
-              <h2 className="group-label">{g.title}<span className="g-count">{g.rows.length} {g.rows.length === 1 ? "order" : "orders"} · {inr(g.rows.reduce((s, o) => s + o.total, 0))}</span></h2>
-              <div className="ledger-wrap">
-                <table className="ledger">
-                  <thead><tr><th>Order</th><th>When</th><th>Buyer</th><th className="r">Total</th><th>Method</th><th>Fulfilment</th><th></th></tr></thead>
-                  <tbody>
-                    {g.rows.map((o) => (
-                      <tr key={o.id}>
-                        <td className="num">#{o.id}</td>
-                        <td style={{ whiteSpace: "nowrap" }}>{fmtWhen(o.createdAt)}</td>
-                        <td style={{ fontWeight: 500 }}>{o.name}</td>
-                        <td className="r num">{inr(o.total)}</td>
-                        <td>{o.payMethod}</td>
-                        <td>{o.fulfilment === "DELIVERY" ? "Delivery" : "Pickup"}</td>
-                        <td className="r">
-                          {o.payState === "PENDING" && (
-                            <button className="btn btn-quiet btn-small" disabled={busyId === o.id} onClick={() => pay(o.id, o.name, o.total)}>
-                              {busyId === o.id ? "Paying..." : "Mark paid"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))}
+          <div className="ledger-wrap">
+            <table className="ledger">
+              <thead><tr><th>Order</th><th>When</th><th>Buyer</th><th className="r">Total</th><th>Method</th><th>Status</th><th>Fulfilment</th><th></th></tr></thead>
+              <tbody>
+                {list.map((o) => (
+                  <tr key={o.id} className={o.payState === "PAID" ? "row-off" : ""}>
+                    <td className="num">#{o.id}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>{fmtWhen(o.createdAt)}</td>
+                    <td style={{ fontWeight: 500 }}>{o.name}</td>
+                    <td className="r num">{inr(o.total)}</td>
+                    <td>{o.payMethod}</td>
+                    <td><span className={`status ${o.payState === "PAID" ? "active" : "expiring"}`}>{o.payState === "PAID" ? "Paid" : "Pending"}</span></td>
+                    <td>{o.fulfilment === "DELIVERY" ? "Delivery" : "Pickup"}</td>
+                    <td className="r">
+                      {o.payState === "PENDING" && (
+                        <button className="btn btn-quiet" disabled={busyId === o.id} onClick={() => pay(o.id, o.name, o.total)}>
+                          {busyId === o.id ? "Paying..." : "Mark paid"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16 }}>
             <button className="btn btn-quiet" disabled={pageNo <= 1} onClick={() => setPageNo(pageNo - 1)}>Previous</button>
             <span className="muted">Page {pageNo}</span>

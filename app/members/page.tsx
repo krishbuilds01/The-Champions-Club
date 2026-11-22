@@ -85,13 +85,6 @@ export default function Members() {
         <p className="page-eyebrow">Front desk</p>
         <h1 className="page-title">Members</h1>
         <p className="sub">Find any member in seconds, and see their plan and where it stands.</p>
-        {!members.loading && !members.error && (members.data ?? []).length > 0 && (
-          <div className="stat-chips">
-            <span className="stat-chip"><i className="on" />{(members.data ?? []).filter((m) => m.state === "active").length} active</span>
-            <span className="stat-chip"><i className="soon" />{(members.data ?? []).filter((m) => m.state === "expiring").length} expiring soon</span>
-            <span className="stat-chip"><i className="off" />{(members.data ?? []).filter((m) => m.state === "expired").length} expired</span>
-          </div>
-        )}
       </div>
 
       <div className="toolbar">
@@ -100,16 +93,17 @@ export default function Members() {
           <input id="m-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, phone or email" />
         </div>
         {!members.loading && !members.error && all.length > 0 && (
-          <div className="seg" role="group" aria-label="Filter by plan state">
-            <button aria-pressed={stateFilter === "all"} onClick={() => setStateFilter("all")}>All</button>
-            <button aria-pressed={stateFilter === "active"} onClick={() => setStateFilter("active")}>Active</button>
-            <button aria-pressed={stateFilter === "expiring"} onClick={() => setStateFilter("expiring")}>Expiring soon</button>
-            <button aria-pressed={stateFilter === "expired"} onClick={() => setStateFilter("expired")}>Expired</button>
-          </div>
+          <p className="count-line"><b>{list.length}</b> {list.length === 1 ? "member" : "members"}{q ? " found" : ""} · {all.filter((m) => m.state === "active").length} active</p>
         )}
       </div>
+
       {!members.loading && !members.error && all.length > 0 && (
-        <p className="count-line" style={{ marginTop: 10 }}><b>{list.length}</b> {list.length === 1 ? "member" : "members"}{q ? " found" : ""}</p>
+        <div className="seg" role="group" aria-label="Filter by plan state" style={{ marginTop: 16 }}>
+          <button aria-pressed={stateFilter === "all"} onClick={() => setStateFilter("all")}>All</button>
+          <button aria-pressed={stateFilter === "active"} onClick={() => setStateFilter("active")}>Active</button>
+          <button aria-pressed={stateFilter === "expiring"} onClick={() => setStateFilter("expiring")}>Expiring soon</button>
+          <button aria-pressed={stateFilter === "expired"} onClick={() => setStateFilter("expired")}>Expired</button>
+        </div>
       )}
 
       {members.loading ? (
@@ -128,11 +122,11 @@ export default function Members() {
               {list.map((m) => (
                 <tr key={m.id} className={m.state === "expired" ? "row-off" : ""}>
                   <td style={{ fontWeight: 500 }}>{m.name}</td>
-                  <td><span className="tag">{m.plan}</span></td>
+                  <td>{m.plan}</td>
                   <td className="num hide-m">{m.phone}</td>
                   <td className="num hide-m">{m.expiresOn}</td>
                   <td><span className={`status ${m.state}`}>{stateLabel[m.state]}</span></td>
-                  <td><button className="btn btn-quiet btn-small" disabled={renewBusy !== null} onClick={() => renew(m)}>{renewBusy === m.id ? "Renewing..." : "Renew"}</button></td>
+                  <td><button className="btn btn-quiet" disabled={renewBusy !== null} onClick={() => renew(m)}>{renewBusy === m.id ? "Renewing..." : "Renew"}</button></td>
                 </tr>
               ))}
             </tbody>

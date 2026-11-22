@@ -94,35 +94,25 @@ export default function Payroll() {
           {shown.length === 0 ? (
             <div style={{ marginTop: 20 }}><Empty>{monthFilter ? "No payroll records that month." : "No payroll records yet. Add the first one below."}</Empty></div>
           ) : (
-            <>
-              {[...new Set(shown.map((p) => p.month))].map((mk) => {
-                const rows = shown.filter((p) => p.month === mk);
-                const label = new Date(`${mk}-02T00:00:00Z`).toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "UTC" });
-                return (
-                  <div key={mk}>
-                    <h2 className="group-label">{label}<span className="g-count">net {inr(rows.reduce((s, p) => s + p.net, 0))}</span></h2>
-                    <div className="ledger-wrap">
-                      <table className="ledger">
-                        <thead><tr><th>Staff</th><th className="hide-m">Leave</th><th className="hide-m r">Salary</th><th className="hide-m r">Tax</th><th className="r">Net pay</th><th>Status</th><th></th></tr></thead>
-                        <tbody>
-                          {rows.map((p) => (
-                            <tr key={p.id}>
-                              <td style={{ fontWeight: 500 }}>{p.staffName}</td>
-                              <td className="hide-m num">{p.leaveDays}d</td>
-                              <td className="hide-m r num">{inr(p.salary)}</td>
-                              <td className="hide-m r num">{inr(p.tax)}</td>
-                              <td className="r num">{inr(p.net)}</td>
-                              <td><span className={`status ${p.status === "PAID" ? "active" : "expiring"}`}>{p.status === "PAID" ? "Paid" : "Pending"}</span></td>
-                              <td className="r">{p.status === "PENDING" && <button className="btn btn-quiet btn-small" disabled={busyId === p.id} onClick={() => pay(p)}>{busyId === p.id ? "Paying..." : "Mark paid"}</button>}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })}
-            </>
+            <div className="ledger-wrap" style={{ marginTop: 20 }}>
+              <table className="ledger">
+                <thead><tr><th>Staff</th><th>Month</th><th className="hide-m">Leave</th><th className="hide-m r">Salary</th><th className="hide-m r">Tax</th><th className="r">Net pay</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  {shown.map((p) => (
+                    <tr key={p.id} className={p.status === "PAID" ? "row-off" : ""}>
+                      <td style={{ fontWeight: 500 }}>{p.staffName}</td>
+                      <td className="num">{p.month}</td>
+                      <td className="hide-m num">{p.leaveDays}d</td>
+                      <td className="hide-m r num">{inr(p.salary)}</td>
+                      <td className="hide-m r num">{inr(p.tax)}</td>
+                      <td className="r num">{inr(p.net)}</td>
+                      <td><span className={`status ${p.status === "PAID" ? "active" : "expiring"}`}>{p.status === "PAID" ? "Paid" : "Pending"}</span></td>
+                      <td className="r">{p.status === "PENDING" && <button className="btn btn-quiet" disabled={busyId === p.id} onClick={() => pay(p)}>{busyId === p.id ? "Paying..." : "Mark paid"}</button>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
 
           <section className="block">

@@ -10,10 +10,7 @@ import { Loading, ErrorBox, Empty } from "@/components/States";
 // says so instead of showing stale numbers.
 export default function Plans() {
   const plans = useApi(() => api.plans(), []);
-  const courts = useApi(() => api.courts(), []);
   const list = plans.data ?? [];
-  const walkTennis = courts.data?.find((c) => c.sport === "Tennis")?.walkinPrice;
-  const walkCricket = courts.data?.find((c) => c.sport === "Cricket")?.walkinPrice;
 
   return (
     <main className="shop-page">
@@ -66,36 +63,6 @@ export default function Plans() {
                 );
               })}
             </div>
-            <section className="block">
-              <div className="sec-head"><h2>Side by side</h2></div>
-              <div className="ledger-wrap">
-                <table className="ledger">
-                  <thead>
-                    <tr><th>Plan</th><th className="r">Tennis / hr</th><th className="r">Cricket / hr</th><th className="r">Shop saving</th><th className="r">Bar saving</th><th className="r">Runs for</th></tr>
-                  </thead>
-                  <tbody>
-                    {list.map((p) => (
-                      <tr key={p.code}>
-                        <td style={{ fontWeight: 600 }}>{p.name}{p.code === "junior" ? <span className="muted"> · under 18</span> : null}</td>
-                        <td className="r num">{inr(p.tennisPrice)}</td>
-                        <td className="r num">{inr(p.cricketPrice)}</td>
-                        <td className="r num">{p.shopDiscount}%</td>
-                        <td className="r num">{p.barDiscount}%</td>
-                        <td className="r num">{p.termDays} days</td>
-                      </tr>
-                    ))}
-                    <tr>
-                      <td style={{ fontWeight: 600 }}>Walk-in <span className="muted">· no plan</span></td>
-                      <td className="r num">{walkTennis !== undefined ? inr(walkTennis) : "—"}</td>
-                      <td className="r num">{walkCricket !== undefined ? inr(walkCricket) : "—"}</td>
-                      <td className="r num">—</td>
-                      <td className="r num">—</td>
-                      <td className="r num">—</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
             <p className="sub" style={{ marginTop: 24, textAlign: "center" }}>
               Not sure which plan fits?{" "}
               <a className="text-link" href="mailto:frontdesk@champions.club">Ask the front desk</a>{" "}

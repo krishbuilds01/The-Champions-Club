@@ -75,34 +75,25 @@ export default function Bookings() {
       ) : shown.length === 0 ? (
         <Empty>{statusFilter === "CANCELLED" ? "No cancelled bookings." : "No bookings standing. The courts are free."}</Empty>
       ) : (
-        <>
-          {[...new Set(shown.map((b) => b.date))].map((day) => {
-            const dayRows = shown.filter((b) => b.date === day);
-            return (
-              <div key={day}>
-                <h2 className="group-label">{fmtDate(day)}<span className="g-count">{dayRows.length} {dayRows.length === 1 ? "booking" : "bookings"}</span></h2>
-                <div className="ledger-wrap">
-                  <table className="ledger">
-                    <thead><tr><th>Time</th><th>Court</th><th>Who</th><th className="hide-m">Type</th><th className="hide-m">Price</th><th>Status</th><th /></tr></thead>
-                    <tbody>
-                      {dayRows.map((b) => (
-                        <tr key={b.id} className={b.state === "CANCELLED" ? "row-off" : ""}>
-                          <td className="num">{fmtTime(b.start)}</td>
-                          <td>{b.court}</td>
-                          <td>{b.who}{b.type === "TRIAL" && b.phone ? <span className="muted"> · {b.phone}</span> : null}</td>
-                          <td className="hide-m">{typeLabel[b.type]}</td>
-                          <td className="num hide-m">{b.price ? inr(b.price) : "Plan"}</td>
-                          <td><span className={`status ${b.state === "BOOKED" ? "booked" : "cancelled"}`}>{b.state === "BOOKED" ? "Booked" : "Cancelled"}</span></td>
-                          <td className="r">{b.state === "BOOKED" && <button className="text-link" disabled={busyId === b.id} onClick={() => cancel(b)}>{busyId === b.id ? "Cancelling..." : "Cancel"}</button>}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          })}
-        </>
+        <div className="ledger-wrap">
+          <table className="ledger">
+            <thead><tr><th>Date</th><th>Time</th><th>Court</th><th>Who</th><th className="hide-m">Type</th><th className="hide-m">Price</th><th>Status</th><th /></tr></thead>
+            <tbody>
+              {shown.map((b) => (
+                <tr key={b.id} className={b.state === "CANCELLED" ? "row-off" : ""}>
+                  <td className="num" style={{ whiteSpace: "nowrap" }}>{fmtDate(b.date)}</td>
+                  <td className="num">{fmtTime(b.start)}</td>
+                  <td>{b.court}</td>
+                  <td>{b.who}{b.type === "TRIAL" && b.phone ? <span className="muted"> · {b.phone}</span> : null}</td>
+                  <td className="hide-m">{typeLabel[b.type]}</td>
+                  <td className="num hide-m">{b.price ? inr(b.price) : "Plan"}</td>
+                  <td><span className={`status ${b.state === "BOOKED" ? "booked" : "cancelled"}`}>{b.state === "BOOKED" ? "Booked" : "Cancelled"}</span></td>
+                  <td className="r">{b.state === "BOOKED" && <button className="text-link" disabled={busyId === b.id} onClick={() => cancel(b)}>{busyId === b.id ? "Cancelling..." : "Cancel"}</button>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </main>
   );

@@ -57,10 +57,10 @@ export default function MemberLogin() {
             Sign in as Aarav Mehta (Gold)
           </button>
         </div>
-        <p className="member-link" style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 14 }}>
-          Club staff? <Link href="/login">Staff sign in</Link>
-        </p>
       </div>
+      <p className="member-link">
+        Club staff? <Link href="/login">Staff sign in</Link>
+      </p>
     </main>
   );
 }

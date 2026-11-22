@@ -246,9 +246,44 @@ export default function Bar() {
           </div>
 
           {tab ? (
-            <div className="work-grid">
-              <div>
-              <div className="sec-head" ><h2>The menu</h2></div>
+            <>
+              <div className="panel panel-main" style={{ marginTop: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+                  <p style={{ fontWeight: 600 }}>
+                    {tab.who}
+                    {tab.tableNo ? `, table ${tab.tableNo}` : ""}
+                    {plan ? `, ${plan.name} plan${plan.barDiscount ? `, ${plan.barDiscount}% off at settle` : ""}` : ", walk-in"}
+                  </p>
+                  <span className="s-price num">{inr(tab.subtotal)}</span>
+                </div>
+                {tab.items.length > 0 ? (
+                  <div className="rows" style={{ marginTop: 10 }}>
+                    {tab.items.map((i) => (
+                      <div className="row-item" key={i.productId}>
+                        <div className="row-main"><p className="row-name">{i.qty} × {i.name}</p></div>
+                        <span className="num">{inr(i.qty * i.price)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="muted" style={{ marginTop: 8 }}>Nothing on this tab yet. Add from the menu below.</p>
+                )}
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "end", marginTop: 16 }}>
+                  <div>
+                    <label>Paying by</label>
+                    <div className="seg" role="group" aria-label="Payment method">
+                      {methods.map((m) => (
+                        <button key={m.code} aria-pressed={payMethod === m.code} onClick={() => setPayMethod(m.code)}>{m.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <button className="btn btn-ink" disabled={busy || tab.items.length === 0} onClick={settle}>
+                    {busy ? "Settling..." : tab.items.length === 0 ? "No items on tab" : `Settle tab, ${inr(tab.subtotal)}`}
+                  </button>
+                </div>
+              </div>
+
+              <div className="sec-head" style={{ marginTop: 28 }}><h2>The menu</h2></div>
               <div className="shop-grid">
                 {shown.map((p) => (
                   <div className={`product-card${(draft[p.id] ?? 0) > 0 ? " picked" : ""}`} key={p.id}>
@@ -278,43 +313,7 @@ export default function Bar() {
                   <button className="btn btn-ink" disabled={busy} onClick={addDraft}>{busy ? "Adding..." : "Add to tab"}</button>
                 </div>
               )}
-              </div>
-              <div className="panel work-side">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
-                  <p style={{ fontWeight: 600 }}>
-                    {tab.who}
-                    {tab.tableNo ? `, table ${tab.tableNo}` : ""}
-                    {plan ? `, ${plan.name} plan${plan.barDiscount ? `, ${plan.barDiscount}% off at settle` : ""}` : ", walk-in"}
-                  </p>
-                  <span className="s-price num">{inr(tab.subtotal)}</span>
-                </div>
-                {tab.items.length > 0 ? (
-                  <div className="rows" style={{ marginTop: 10 }}>
-                    {tab.items.map((i) => (
-                      <div className="row-item" key={i.productId}>
-                        <div className="row-main"><p className="row-name">{i.qty} × {i.name}</p></div>
-                        <span className="num">{inr(i.qty * i.price)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="muted" style={{ marginTop: 8 }}>Nothing on this tab yet. Add from the menu.</p>
-                )}
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "end", marginTop: 16 }}>
-                  <div>
-                    <label>Paying by</label>
-                    <div className="seg" role="group" aria-label="Payment method">
-                      {methods.map((m) => (
-                        <button key={m.code} aria-pressed={payMethod === m.code} onClick={() => setPayMethod(m.code)}>{m.label}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <button className="btn btn-ink" disabled={busy || tab.items.length === 0} onClick={settle}>
-                    {busy ? "Settling..." : tab.items.length === 0 ? "No items on tab" : `Settle tab, ${inr(tab.subtotal)}`}
-                  </button>
-                </div>
-              </div>
-            </div>
+            </>
           ) : (
             <p className="muted" style={{ marginTop: 24 }}>No open tabs. Open one above to start.</p>
           )}

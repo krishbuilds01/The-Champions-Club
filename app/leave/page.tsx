@@ -64,11 +64,6 @@ export default function Leave() {
         <p className="page-eyebrow">Staff</p>
         <h1 className="page-title">Leave</h1>
         <p className="sub">Time off, requested and approved in one place. Approved leave counts against the month&apos;s pay record.</p>
-        {(leaves.data ?? []).some((l) => l.status === "PENDING") && (
-          <div className="stat-chips">
-            <span className="stat-chip"><i className="soon" />{(leaves.data ?? []).filter((l) => l.status === "PENDING").length} waiting for a decision</span>
-          </div>
-        )}
       </div>
 
       {loading ? (
@@ -92,45 +87,35 @@ export default function Leave() {
           {list.length === 0 ? (
             <Empty>{filter === "all" ? "No leave requests yet." : `No ${filter.toLowerCase()} requests right now.`}</Empty>
           ) : (
-            <>
-              {[
-                { title: "Waiting for a decision", rows: list.filter((l) => l.status === "PENDING") },
-                { title: "Decided", rows: list.filter((l) => l.status !== "PENDING") },
-              ].filter((g) => g.rows.length > 0).map((g) => (
-                <div key={g.title}>
-                  <h2 className="group-label">{g.title}<span className="g-count">{g.rows.length}</span></h2>
-                  <div className="ledger-wrap">
-                    <table className="ledger">
-                      <thead><tr><th>Staff</th><th>From</th><th>To</th><th className="hide-m">Type</th><th className="hide-m">Reason</th><th>Status</th>{isOwner && <th>Decision</th>}</tr></thead>
-                      <tbody>
-                        {g.rows.map((l) => (
-                          <tr key={l.id}>
-                            <td style={{ fontWeight: 500 }}>{l.staffName}</td>
-                            <td className="num">{l.fromDate}</td>
-                            <td className="num">{l.toDate}</td>
-                            <td className="hide-m">{typeLabel[l.type]}</td>
-                            <td className="hide-m">{l.reason || "—"}</td>
-                            <td><span className={`status ${statusClass[l.status]}`}>{l.status === "PENDING" ? "Pending" : l.status === "APPROVED" ? "Approved" : "Rejected"}</span></td>
-                            {isOwner && (
-                              <td>
-                                {l.status === "PENDING" ? (
-                                  <span style={{ display: "inline-flex", gap: 8 }}>
-                                    <button className="btn btn-quiet btn-small" disabled={decideBusy !== null} onClick={() => decide(l, "APPROVED")}>{decideBusy === l.id ? "Saving..." : "Approve"}</button>
-                                    <button className="btn btn-quiet btn-small" disabled={decideBusy !== null} onClick={() => decide(l, "REJECTED")}>Reject</button>
-                                  </span>
-                                ) : (
-                                  <span className="muted">{l.decidedBy ? `by ${l.decidedBy}` : "—"}</span>
-                                )}
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
-            </>
+            <div className="ledger-wrap">
+              <table className="ledger">
+                <thead><tr><th>Staff</th><th>From</th><th>To</th><th className="hide-m">Type</th><th className="hide-m">Reason</th><th>Status</th>{isOwner && <th>Decision</th>}</tr></thead>
+                <tbody>
+                  {list.map((l) => (
+                    <tr key={l.id} className={l.status === "REJECTED" ? "row-off" : ""}>
+                      <td style={{ fontWeight: 500 }}>{l.staffName}</td>
+                      <td className="num">{l.fromDate}</td>
+                      <td className="num">{l.toDate}</td>
+                      <td className="hide-m">{typeLabel[l.type]}</td>
+                      <td className="hide-m">{l.reason || "—"}</td>
+                      <td><span className={`status ${statusClass[l.status]}`}>{l.status === "PENDING" ? "Pending" : l.status === "APPROVED" ? "Approved" : "Rejected"}</span></td>
+                      {isOwner && (
+                        <td>
+                          {l.status === "PENDING" ? (
+                            <span style={{ display: "inline-flex", gap: 8 }}>
+                              <button className="btn btn-quiet" disabled={decideBusy !== null} onClick={() => decide(l, "APPROVED")}>{decideBusy === l.id ? "Saving..." : "Approve"}</button>
+                              <button className="btn btn-quiet" disabled={decideBusy !== null} onClick={() => decide(l, "REJECTED")}>Reject</button>
+                            </span>
+                          ) : (
+                            <span className="muted">{l.decidedBy ? `by ${l.decidedBy}` : "—"}</span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
 
           <section className="block">

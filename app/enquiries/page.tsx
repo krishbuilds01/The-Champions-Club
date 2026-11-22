@@ -116,101 +116,97 @@ export default function Enquiries() {
             <input className="shop-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, contact or message…" aria-label="Search enquiries" />
           </div>
           {shown.length === 0 && <Empty>No enquiries match that filter or search.</Empty>}
-          <div>
+          <div className="rows">
             {shown.map((e) => (
-              <article className={`enq-card${e.status === "NEW" ? " is-new" : ""}${e.status === "LOST" ? " is-off" : ""}`} key={e.id}>
-                <div className="enq-top">
-                  <div className="row-main">
-                    <p className="row-name">
-                      {e.name} <span className="tag">{e.interest}</span>
+              <div className={`row-item${e.status === "NEW" ? " row-new" : ""}${e.status === "LOST" ? " row-off" : ""}`} key={e.id} style={{ alignItems: "start" }}>
+                <div className="row-main">
+                  <p className="row-name">
+                    {e.name} <span className="tag">{e.interest}</span>
+                  </p>
+                  <p className="muted">
+                    {e.contact} · {new Date(e.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                  </p>
+                  {e.message && <p style={{ marginTop: 4 }}>{e.message}</p>}
+                  {e.quoteAmount !== null && (
+                    <p style={{ marginTop: 6 }}>
+                      <span className="tag">Quote recorded</span>{" "}
+                      <strong>{e.quotePlan} · {inr(e.quoteAmount)}</strong>
+                      {e.quotedAt ? <span className="muted"> · {new Date(e.quotedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span> : null}
+                      {e.quoteNote ? <span className="muted"> — {e.quoteNote}</span> : null}
                     </p>
-                    <p className="muted">
-                      {e.contact} · {new Date(e.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                    </p>
-                    {e.message && <p style={{ marginTop: 6 }}>{e.message}</p>}
-                    {e.quoteAmount !== null && (
-                      <p style={{ marginTop: 8 }}>
-                        <span className="tag">Quote recorded</span>{" "}
-                        <strong>{e.quotePlan} · {inr(e.quoteAmount)}</strong>
-                        {e.quotedAt ? <span className="muted"> · {new Date(e.quotedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span> : null}
-                        {e.quoteNote ? <span className="muted"> — {e.quoteNote}</span> : null}
-                      </p>
-                    )}
-                  </div>
-                  <select
-                    style={{ width: "auto", minWidth: 140, flexShrink: 0 }}
-                    aria-label={`Status for ${e.name}`}
-                    value={e.status}
-                    disabled={busyId === e.id}
-                    onChange={(ev) => patch(e.id, { status: ev.target.value as EnquiryDTO["status"] })}
-                  >
-                    {statuses.map((s) => (
-                      <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="enq-actions">
-                  <div className="a-row">
+                  )}
+                  <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                     <input
                       aria-label={`Follow-up note for ${e.name}`}
                       placeholder="Follow-up note"
                       value={notes[e.id] ?? e.note}
                       onChange={(ev) => setNotes((n) => ({ ...n, [e.id]: ev.target.value }))}
-                      style={{ flex: "1 1 220px", width: "auto" }}
+                      style={{ minWidth: 220 }}
                     />
                     <button className="btn btn-quiet" disabled={busyId === e.id} onClick={() => patch(e.id, { note: notes[e.id] ?? e.note })}>
                       Save note
                     </button>
-                    {e.status === "CONVERTED" && <span className="muted">Member ✓</span>}
+                    {e.status !== "CONVERTED" && (
+                      <>
+                        <select
+                          style={{ width: "auto", minWidth: 120 }}
+                          aria-label={`Plan for ${e.name}`}
+                          value={planFor[e.id] ?? ""}
+                          onChange={(ev) => {
+                            const code = ev.target.value;
+                            setPlanFor((p) => ({ ...p, [e.id]: code }));
+                            // The quote amount comes from the plan picked.
+                            const plan = plans.data?.find((p) => p.code === code);
+                            if (plan) setQuoteAmt((q) => ({ ...q, [e.id]: String(plan.tennisPrice) }));
+                          }}
+                        >
+                          <option value="" disabled>Pick a plan</option>
+                          {(plans.data ?? []).map((p) => (
+                            <option key={p.code} value={p.code}>{p.name} — ₹{p.tennisPrice}</option>
+                          ))}
+                        </select>
+                        <button className="btn btn-ink" disabled={busyId === e.id} onClick={() => convert(e)}>
+                          Make member
+                        </button>
+                      </>
+                    )}
+                    {e.status === "CONVERTED" && <span className="muted" style={{ alignSelf: "center" }}>Member ✓</span>}
                   </div>
-                  {e.status !== "CONVERTED" && (
-                    <div className="a-row">
-                      <select
-                        style={{ width: "auto", minWidth: 150 }}
-                        aria-label={`Plan for ${e.name}`}
-                        value={planFor[e.id] ?? ""}
-                        onChange={(ev) => {
-                          const code = ev.target.value;
-                          setPlanFor((p) => ({ ...p, [e.id]: code }));
-                          // The quote amount comes from the plan picked.
-                          const plan = plans.data?.find((p) => p.code === code);
-                          if (plan) setQuoteAmt((q) => ({ ...q, [e.id]: String(plan.tennisPrice) }));
-                        }}
-                      >
-                        <option value="" disabled>Pick a plan</option>
-                        {(plans.data ?? []).map((p) => (
-                          <option key={p.code} value={p.code}>{p.name} — ₹{p.tennisPrice}</option>
-                        ))}
-                      </select>
-                      <button className="btn btn-ink" disabled={busyId === e.id} onClick={() => convert(e)}>
-                        Make member
+                  {e.status !== "CONVERTED" && e.status !== "LOST" && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                      <input
+                        aria-label={`Quote amount for ${e.name}`}
+                        placeholder="Quote ₹ (uses the plan picked above)"
+                        inputMode="numeric"
+                        value={quoteAmt[e.id] ?? (e.quoteAmount !== null ? String(e.quoteAmount) : "")}
+                        onChange={(ev) => setQuoteAmt((q) => ({ ...q, [e.id]: ev.target.value.replace(/\D/g, "") }))}
+                        style={{ minWidth: 200 }}
+                      />
+                      <input
+                        aria-label={`Quote note for ${e.name}`}
+                        placeholder="Quote note — what it covers"
+                        value={quoteNotes[e.id] ?? e.quoteNote}
+                        onChange={(ev) => setQuoteNotes((q) => ({ ...q, [e.id]: ev.target.value }))}
+                        style={{ minWidth: 200 }}
+                      />
+                      <button className="btn btn-quiet" disabled={busyId === e.id} onClick={() => quote(e)}>
+                        {e.quoteAmount !== null ? "Update quote" : "Record quote"}
                       </button>
-                      {e.status !== "LOST" && (
-                        <>
-                          <input
-                            aria-label={`Quote amount for ${e.name}`}
-                            placeholder="Quote ₹"
-                            inputMode="numeric"
-                            value={quoteAmt[e.id] ?? (e.quoteAmount !== null ? String(e.quoteAmount) : "")}
-                            onChange={(ev) => setQuoteAmt((q) => ({ ...q, [e.id]: ev.target.value.replace(/\D/g, "") }))}
-                            style={{ width: 130 }}
-                          />
-                          <input
-                            aria-label={`Quote note for ${e.name}`}
-                            placeholder="Quote note — what it covers"
-                            value={quoteNotes[e.id] ?? e.quoteNote}
-                            onChange={(ev) => setQuoteNotes((q) => ({ ...q, [e.id]: ev.target.value }))}
-                            style={{ flex: "1 1 180px", width: "auto" }}
-                          />
-                          <button className="btn btn-quiet" disabled={busyId === e.id} onClick={() => quote(e)}>
-                            {e.quoteAmount !== null ? "Update quote" : "Record quote"}
-                          </button>
-                        </>
-                      )}
                     </div>
                   )}
                 </div>
-              </article>
+                <select
+                  style={{ width: "auto", minWidth: 140, flexShrink: 0 }}
+                  aria-label={`Status for ${e.name}`}
+                  value={e.status}
+                  disabled={busyId === e.id}
+                  onChange={(ev) => patch(e.id, { status: ev.target.value as EnquiryDTO["status"] })}
+                >
+                  {statuses.map((s) => (
+                    <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
+                  ))}
+                </select>
+              </div>
             ))}
           </div>
         </>

@@ -79,32 +79,23 @@ export default function Invoices() {
           {list.length === 0 ? (
             <div style={{ marginTop: 20 }}><Empty>No invoices yet. Raise the first one below.</Empty></div>
           ) : (
-            <>
-              {[
-                { title: "Unpaid", rows: list.filter((i) => i.status === "UNPAID") },
-                { title: "Paid", rows: list.filter((i) => i.status === "PAID") },
-              ].filter((g) => g.rows.length > 0).map((g) => (
-                <div key={g.title}>
-                  <h2 className="group-label">{g.title}<span className="g-count">{g.rows.length} · {inr(g.rows.reduce((s, i) => s + i.amount, 0))}</span></h2>
-                  <div className="ledger-wrap">
-                    <table className="ledger">
-                      <thead><tr><th>Billed to</th><th className="hide-m">For</th><th className="hide-m">Issued</th><th className="r">Amount</th><th></th></tr></thead>
-                      <tbody>
-                        {g.rows.map((i) => (
-                          <tr key={i.id}>
-                            <td style={{ fontWeight: 500 }}>{i.billedTo}</td>
-                            <td className="hide-m">{i.detail || "—"}</td>
-                            <td className="hide-m num">{i.issuedOn}</td>
-                            <td className="r num">{inr(i.amount)}</td>
-                            <td className="r">{i.status === "UNPAID" && <button className="btn btn-quiet btn-small" disabled={busyId === i.id} onClick={() => pay(i)}>{busyId === i.id ? "Paying..." : "Mark paid"}</button>}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
-            </>
+            <div className="ledger-wrap" style={{ marginTop: 20 }}>
+              <table className="ledger">
+                <thead><tr><th>Billed to</th><th className="hide-m">For</th><th className="hide-m">Issued</th><th className="r">Amount</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  {list.map((i) => (
+                    <tr key={i.id} className={i.status === "PAID" ? "row-off" : ""}>
+                      <td style={{ fontWeight: 500 }}>{i.billedTo}</td>
+                      <td className="hide-m">{i.detail || "—"}</td>
+                      <td className="hide-m num">{i.issuedOn}</td>
+                      <td className="r num">{inr(i.amount)}</td>
+                      <td><span className={`status ${i.status === "PAID" ? "active" : "expiring"}`}>{i.status === "PAID" ? "Paid" : "Unpaid"}</span></td>
+                      <td className="r">{i.status === "UNPAID" && <button className="btn btn-quiet" disabled={busyId === i.id} onClick={() => pay(i)}>{busyId === i.id ? "Paying..." : "Mark paid"}</button>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
 
           <section className="block">

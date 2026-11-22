@@ -97,10 +97,10 @@ export default function Login() {
           </div>
           <p className="demo-creds">owner@champions.club · champions — the rest use demo1234</p>
         </div>
-        <p className="member-link" style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 2 }}>
+      </div>
+      <p className="member-link">
         A club member? <Link href="/member/login">Member sign in</Link>
       </p>
-      </div>
     </main>
   );
 }
