@@ -117,15 +117,17 @@ export default function Home() {
               <p className="mt-8 max-w-lg text-sm leading-7 text-white/70 sm:text-base">More than a place to play. Champions is your home court, your local, and your community—all under one roof.</p>
               <div className="mt-9 flex flex-wrap gap-3">
                 {member ? (
-                  <Link href="/courts" className="group flex items-center gap-5 rounded-full bg-[#dfff45] px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#163021] transition hover:bg-white">
+                  <Link href="/courts" className="group flex items-center gap-5 rounded-full bg-[#dfff45] px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#163021] border-2 border-[#163021] shadow-[4px_4px_0px_rgba(22,48,33,0.5)] transition hover:bg-white hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_rgba(22,48,33,0.5)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_rgba(22,48,33,0.5)]">
                     View Courts &amp; Book <Icon name="arrow" className="h-4 w-4 transition group-hover:translate-x-1" />
                   </Link>
                 ) : (
-                  <Link href="/member-login?tab=signup" className="group flex items-center gap-5 rounded-full bg-[#dfff45] px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#163021] transition hover:bg-white">
+                  <Link href="/member-login?tab=signup" className="group flex items-center gap-5 rounded-full bg-[#dfff45] px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#163021] border-2 border-[#163021] shadow-[4px_4px_0px_rgba(22,48,33,0.5)] transition hover:bg-white hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_rgba(22,48,33,0.5)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_rgba(22,48,33,0.5)]">
                     Join the club <Icon name="arrow" className="h-4 w-4 transition group-hover:translate-x-1" />
                   </Link>
                 )}
-                <Link href="/trial" className="rounded-full border border-white/35 px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#163021]">Book a trial</Link>
+                <Link href="/trial" className="rounded-full border-2 border-white/70 bg-white/10 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-[3px_3px_0px_rgba(255,255,255,0.3)] transition hover:bg-white hover:text-[#163021] hover:border-white hover:shadow-[4px_4px_0px_#dfff45] active:translate-x-[2px] active:translate-y-[2px]">
+                  Book a trial
+                </Link>
               </div>
             </div>
             <div className="mt-16 flex flex-wrap gap-x-12 gap-y-5 border-t border-white/20 pt-6 text-[10px] uppercase tracking-[.18em] text-white/55 lg:absolute lg:bottom-20 lg:right-12 lg:mt-0 lg:w-auto">
@@ -175,7 +177,7 @@ export default function Home() {
               <p className="eyebrow">The clubhouse</p>
               <h2 className="mt-5 font-display text-6xl font-bold uppercase leading-[.88] tracking-tight sm:text-7xl">Good games.<br />Better company.</h2>
               <p className="mt-7 max-w-md text-sm leading-7 text-[#405143]">Our bar and kitchen is made for the full day—from the first flat white to the last round. Seasonal plates, cold drinks, and the best seat in the house for watching the action.</p>
-              <Link href="/bar" className="mt-9 flex w-fit items-center gap-5 rounded-full bg-[#173021] px-6 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-[#173021]">Meet at the bar <Icon name="arrow" className="h-4 w-4" /></Link>
+              <Link href="/bar" className="mt-9 flex w-fit items-center gap-5 rounded-full bg-[#173021] px-6 py-4 text-xs font-bold uppercase tracking-wider text-white border-2 border-[#173021] shadow-[4px_4px_0px_rgba(22,48,33,0.5)] transition hover:bg-white hover:text-[#173021] hover:shadow-[5px_5px_0px_rgba(22,48,33,0.5)] active:translate-x-[2px] active:translate-y-[2px]">Meet at the bar <Icon name="arrow" className="h-4 w-4" /></Link>
             </div>
           </div>
         </section>
@@ -196,8 +198,8 @@ export default function Home() {
             {/* 3 Membership Cards */}
             <div className="mt-8 grid gap-4 lg:gap-6 lg:grid-cols-3 items-stretch">
               {/* CARD 1: GOLD */}
-              <div className="relative flex flex-col justify-between rounded-2xl bg-[#163021] p-5 sm:p-6 text-white shadow-xl ring-2 ring-[#dfff45]">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#dfff45] px-3 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#163021] shadow whitespace-nowrap">
+              <div className="relative flex flex-col justify-between rounded-2xl bg-[#163021] p-5 sm:p-6 text-white border-2 border-[#dfff45] shadow-[6px_6px_0px_#dfff45] transition hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_#dfff45]">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#dfff45] px-3 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-[#163021] border border-[#163021] shadow-[2px_2px_0px_rgba(22,48,33,0.5)] whitespace-nowrap">
                   ⭐ Most Popular · Max Savings
                 </div>
 
@@ -207,7 +209,7 @@ export default function Home() {
                       <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white">Gold Tier</h3>
                       <p className="text-[11px] text-white/60">For regular players &amp; active teams</p>
                     </div>
-                    <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#dfff45] shrink-0">
+                    <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#dfff45] shrink-0 border border-[#dfff45]/40 shadow-[1.5px_1.5px_0px_#dfff45]">
                       All-Access
                     </span>
                   </div>
@@ -222,38 +224,38 @@ export default function Home() {
 
                   {/* Hourly Rates & Benefits */}
                   <div className="mt-3 space-y-1 sm:space-y-1.5 text-[11px]">
-                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 border border-white/10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,0.3)]">
                       <span className="text-white/80">🎾 Tennis Court</span>
                       <span className="font-bold text-[#dfff45]">₹300/hr <span className="font-normal text-white/40 line-through text-[9px]">₹500</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 border border-white/10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,0.3)]">
                       <span className="text-white/80">🏏 Cricket Turf</span>
                       <span className="font-bold text-[#dfff45]">₹500/hr <span className="font-normal text-white/40 line-through text-[9px]">₹800</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 border border-white/10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,0.3)]">
                       <span className="text-white/80">☕ Clubhouse Bar &amp; Café</span>
                       <span className="font-bold text-white">20% OFF Everything</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 border border-white/10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,0.3)]">
                       <span className="text-white/80">🛍️ Pro Shop &amp; Gear</span>
                       <span className="font-bold text-white">15% OFF Equipment</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 border border-white/10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,0.3)]">
                       <span className="text-white/80">📅 Booking Window</span>
                       <span className="font-bold text-white">7 Days in Advance</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 border border-white/10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,0.3)]">
                       <span className="text-white/80">⏱️ Daily Court Limit</span>
                       <span className="font-bold text-[#dfff45]">Up to 4 Slots (4 hrs / day)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 border border-white/10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,0.3)]">
                       <span className="text-white/80">🎟️ Free Guest Passes</span>
                       <span className="font-bold text-[#dfff45]">2 Passes / Month</span>
                     </div>
                   </div>
 
                   {/* 1-Month Profit Box */}
-                  <div className="mt-3 rounded-xl bg-[#dfff45]/10 border border-[#dfff45]/25 p-2.5 text-left">
+                  <div className="mt-3 rounded-xl bg-[#dfff45]/10 border-2 border-[#dfff45] p-2.5 text-left shadow-[2.5px_2.5px_0px_#dfff45]">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-bold uppercase tracking-wider text-[#dfff45]">1-Mo Net Profit</span>
                       <span className="text-xs font-bold text-white">+₹2,100 <span className="text-[#dfff45] font-normal text-[10px]">(Save ₹3,600)</span></span>
@@ -266,14 +268,14 @@ export default function Home() {
 
                 <div className="mt-4">
                   {member?.plan?.code === "gold" ? (
-                    <div className="w-full rounded-full bg-white/20 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white">
+                    <div className="w-full rounded-full bg-white/20 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white border-2 border-white/40">
                       Current Plan ✓
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSelectPlan("gold")}
                       disabled={activating === "gold"}
-                      className="w-full rounded-full bg-[#dfff45] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021] transition hover:bg-white"
+                      className="w-full rounded-full bg-[#dfff45] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021] border-2 border-[#163021] shadow-[3px_3px_0px_rgba(22,48,33,0.5)] transition hover:bg-white hover:shadow-[4px_4px_0px_rgba(22,48,33,0.5)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_rgba(22,48,33,0.5)]"
                     >
                       {activating === "gold" ? "Activating..." : member ? "Activate Gold (₹1,500/mo)" : "Join Gold Membership"}
                     </button>
@@ -282,14 +284,14 @@ export default function Home() {
               </div>
 
               {/* CARD 2: SILVER */}
-              <div className="flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 text-[#163021] border border-[#163021]/15 shadow-sm">
+              <div className="flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 text-[#163021] border-2 border-[#163021] shadow-[6px_6px_0px_rgba(22,48,33,0.5)] transition hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_rgba(22,48,33,0.5)]">
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-[#163021]">Silver Tier</h3>
                       <p className="text-[11px] text-[#617065]">For regular weekly players</p>
                     </div>
-                    <span className="rounded-full bg-[#163021]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#163021] shrink-0">
+                    <span className="rounded-full bg-[#163021]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#163021] shrink-0 border border-[#163021]/30 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.5)]">
                       Club Favourite
                     </span>
                   </div>
@@ -304,38 +306,38 @@ export default function Home() {
 
                   {/* Hourly Rates & Benefits */}
                   <div className="mt-3 space-y-1 sm:space-y-1.5 text-[11px]">
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🎾 Tennis Court</span>
                       <span className="font-bold text-[#163021]">₹400/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹500</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🏏 Cricket Turf</span>
                       <span className="font-bold text-[#163021]">₹650/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹800</span></span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">☕ Clubhouse Bar &amp; Café</span>
                       <span className="font-bold text-[#163021]">10% OFF Everything</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🛍️ Pro Shop &amp; Gear</span>
                       <span className="font-bold text-[#163021]">10% OFF Equipment</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">📅 Booking Window</span>
                       <span className="font-bold text-[#163021]">5 Days in Advance</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">⏱️ Daily Court Limit</span>
                       <span className="font-bold text-[#163021]">Up to 2 Slots (2 hrs / day)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🎟️ Free Guest Passes</span>
                       <span className="font-bold text-[#163021]">1 Pass / Month</span>
                     </div>
                   </div>
 
                   {/* 1-Month Profit Box */}
-                  <div className="mt-3 rounded-xl bg-[#163021]/5 border border-[#163021]/10 p-2.5 text-left">
+                  <div className="mt-3 rounded-xl bg-[#163021]/5 border-2 border-[#163021] p-2.5 text-left shadow-[2.5px_2.5px_0px_rgba(22,48,33,0.5)]">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-bold uppercase tracking-wider text-[#163021]">1-Mo Net Profit</span>
                       <span className="text-xs font-bold text-[#163021]">+₹650 <span className="text-[#2e7d32] font-normal text-[10px]">(Save ₹1,650)</span></span>
@@ -348,14 +350,14 @@ export default function Home() {
 
                 <div className="mt-4">
                   {member?.plan?.code === "silver" ? (
-                    <div className="w-full rounded-full bg-[#163021]/15 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021]">
+                    <div className="w-full rounded-full bg-[#163021]/15 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021] border-2 border-[#163021]/30">
                       Current Plan ✓
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSelectPlan("silver")}
                       disabled={activating === "silver"}
-                      className="w-full rounded-full bg-[#163021] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#dfff45] hover:text-[#163021]"
+                      className="w-full rounded-full bg-[#163021] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white border-2 border-[#163021] shadow-[3px_3px_0px_rgba(22,48,33,0.5)] transition hover:bg-[#dfff45] hover:text-[#163021] hover:shadow-[4px_4px_0px_rgba(22,48,33,0.5)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_rgba(22,48,33,0.5)]"
                     >
                       {activating === "silver" ? "Activating..." : member ? "Activate Silver (₹1,000/mo)" : "Join Silver Membership"}
                     </button>
@@ -364,14 +366,14 @@ export default function Home() {
               </div>
 
               {/* CARD 3: JUNIOR */}
-              <div className="flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 text-[#163021] border border-[#163021]/15 shadow-sm">
+              <div className="flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 text-[#163021] border-2 border-[#163021] shadow-[6px_6px_0px_rgba(22,48,33,0.5)] transition hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_rgba(22,48,33,0.5)]">
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-[#163021]">Junior Tier</h3>
                       <p className="text-[11px] text-[#617065]">Under 18, Students &amp; Youth</p>
                     </div>
-                    <span className="rounded-full bg-[#163021]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#163021] shrink-0">
+                    <span className="rounded-full bg-[#163021]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#163021] shrink-0 border border-[#163021]/30 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.5)]">
                       Youth 50% Off
                     </span>
                   </div>
@@ -386,38 +388,38 @@ export default function Home() {
 
                   {/* Hourly Rates & Benefits */}
                   <div className="mt-3 space-y-1 sm:space-y-1.5 text-[11px]">
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🎾 Tennis Court</span>
                       <span className="font-bold text-[#2e7d32]">₹250/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹500</span> (50% Off)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🏏 Cricket Turf</span>
                       <span className="font-bold text-[#2e7d32]">₹400/hr <span className="font-normal text-[#849087] line-through text-[9px]">₹800</span> (50% Off)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🛍️ Pro Shop Gear</span>
                       <span className="font-bold text-[#163021]">5% OFF Training Gear</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">🏆 Skills Workshop</span>
                       <span className="font-bold text-[#163021]">Free Monthly Clinic</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">📅 Booking Window</span>
                       <span className="font-bold text-[#163021]">3 Days in Advance</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">⏱️ Daily Court Limit</span>
                       <span className="font-bold text-[#2e7d32]">1 Slot (1 hr / day)</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5">
+                    <div className="flex items-center justify-between rounded-lg bg-[#f7f6f0] px-2.5 py-1.5 border border-[#163021]/10 shadow-[1.5px_1.5px_0px_rgba(22,48,33,0.06)]">
                       <span className="text-[#617065]">⏰ Afternoon Priority</span>
                       <span className="font-bold text-[#163021]">2 PM – 6 PM Slots</span>
                     </div>
                   </div>
 
                   {/* 1-Month Profit Box */}
-                  <div className="mt-3 rounded-xl bg-[#163021]/5 border border-[#163021]/10 p-2.5 text-left">
+                  <div className="mt-3 rounded-xl bg-[#163021]/5 border-2 border-[#163021] p-2.5 text-left shadow-[2.5px_2.5px_0px_rgba(22,48,33,0.5)]">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-bold uppercase tracking-wider text-[#163021]">1-Mo Net Profit</span>
                       <span className="text-xs font-bold text-[#163021]">+₹1,900 <span className="text-[#2e7d32] font-normal text-[10px]">(Save ₹2,500)</span></span>
@@ -430,14 +432,14 @@ export default function Home() {
 
                 <div className="mt-4">
                   {member?.plan?.code === "junior" ? (
-                    <div className="w-full rounded-full bg-[#163021]/15 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021]">
+                    <div className="w-full rounded-full bg-[#163021]/15 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-[#163021] border-2 border-[#163021]/30">
                       Current Plan ✓
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSelectPlan("junior")}
                       disabled={activating === "junior"}
-                      className="w-full rounded-full bg-[#163021] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#dfff45] hover:text-[#163021]"
+                      className="w-full rounded-full bg-[#163021] py-2.5 text-center text-xs font-bold uppercase tracking-wider text-white border-2 border-[#163021] shadow-[3px_3px_0px_rgba(22,48,33,0.5)] transition hover:bg-[#dfff45] hover:text-[#163021] hover:shadow-[4px_4px_0px_rgba(22,48,33,0.5)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_rgba(22,48,33,0.5)]"
                     >
                       {activating === "junior" ? "Activating..." : member ? "Activate Junior (₹600/mo)" : "Join Junior Membership"}
                     </button>
@@ -447,7 +449,7 @@ export default function Home() {
             </div>
 
             {/* Custom / Corporate Enquiry Bar */}
-            <div className="mt-12 rounded-2xl border border-[#163021]/15 bg-white p-6 sm:p-8 text-center max-w-3xl mx-auto shadow-sm">
+            <div className="mt-12 rounded-2xl border-2 border-[#163021] bg-white p-6 sm:p-8 text-center max-w-3xl mx-auto shadow-[6px_6px_0px_rgba(22,48,33,0.5)]">
               <p className="eyebrow">Corporate &amp; Family Plans</p>
               <h3 className="mt-3 font-display text-3xl font-bold uppercase text-[#163021] sm:text-4xl">
                 Need a Custom Club Package?
@@ -455,7 +457,7 @@ export default function Home() {
               <p className="mt-3 text-sm text-[#617065] max-w-md mx-auto">
                 We offer custom corporate memberships, team packages, and private family arrangements with dedicated court booking privileges.
               </p>
-              <div className="mx-auto mt-7 flex max-w-md rounded-full border border-[#163021]/15 bg-[#f7f6f0] p-1.5">
+              <div className="mx-auto mt-7 flex max-w-md rounded-full border-2 border-[#163021] bg-[#f7f6f0] p-1.5 shadow-[3px_3px_0px_rgba(22,48,33,0.5)]">
                 <input
                   aria-label="Email address"
                   placeholder="Your corporate or family email"
@@ -474,7 +476,7 @@ export default function Home() {
                       setNotice("Thanks — our membership manager will be in touch shortly");
                     } catch { setNotice("Could not send that — try again"); }
                   }}
-                  className="rounded-full bg-[#163021] px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-[#294d36]"
+                  className="rounded-full bg-[#163021] px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white border-2 border-[#163021] shadow-[2px_2px_0px_rgba(22,48,33,0.5)] transition hover:bg-[#dfff45] hover:text-[#163021] hover:shadow-[3px_3px_0px_rgba(22,48,33,0.5)] active:translate-x-[1px] active:translate-y-[1px]"
                 >
                   Request Info
                 </button>
