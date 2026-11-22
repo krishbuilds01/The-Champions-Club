@@ -61,10 +61,22 @@ export default function Dashboard() {
 
   return (
     <main className="wrap page">
-      <div className="page-head">
-        <p className="page-eyebrow">The club</p>
-        <h1 className="page-title">Owner dashboard</h1>
-        <p className="sub">The whole day in one place: courts, shop and bar.</p>
+      <div className="head-row">
+        <div className="page-head">
+          <p className="page-eyebrow">The club</p>
+          <h1 className="page-title">Owner dashboard</h1>
+          <p className="sub">The whole day in one place: courts, shop and bar.</p>
+        </div>
+        {!dash.loading && !dash.error && (
+          <div className="head-actions">
+            <div className="seg" role="group" aria-label="Period">
+              {periods.map((p) => (
+                <button key={p.code} aria-pressed={period === p.code} onClick={() => setPeriod(p.code)}>{p.label}</button>
+              ))}
+            </div>
+            <button className="btn btn-quiet" onClick={exportCsv}>Export CSV</button>
+          </div>
+        )}
       </div>
 
       {dash.loading ? (
@@ -73,14 +85,6 @@ export default function Dashboard() {
         <ErrorBox message={dash.error} onRetry={dash.reload} />
       ) : (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
-            <div className="seg" role="group" aria-label="Period">
-              {periods.map((p) => (
-                <button key={p.code} aria-pressed={period === p.code} onClick={() => setPeriod(p.code)}>{p.label}</button>
-              ))}
-            </div>
-            <button className="btn btn-quiet" onClick={exportCsv}>Export CSV</button>
-          </div>
 
           <div className="figures">
             {figures.map((f) => (
@@ -92,16 +96,18 @@ export default function Dashboard() {
           </div>
 
           {d!.byMethod.length > 0 && (
-            <p className="pay-strip">
-              Taken today by{" "}
-              {d!.byMethod.map((m, i) => (
-                <span key={m.method}>
-                  {i > 0 ? " · " : ""}
-                  {methodLabel[m.method]} <span className="num">{inr(m.amount)}</span>
-                </span>
-              ))}{" "}
-              at the shop and bar tills. Court money is paid at the desk.
-            </p>
+            <div className="panel" style={{ marginTop: 16, padding: "18px 22px" }}>
+              <p className="f-label" style={{ fontSize: 11, color: "var(--muted)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>Taken today at the tills</p>
+              <div className="method-grid">
+                {d!.byMethod.map((m) => (
+                  <div className="m-item" key={m.method}>
+                    <b className="num">{inr(m.amount)}</b>
+                    <span>{methodLabel[m.method]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>Shop and bar tills only — court money is paid at the desk.</p>
+            </div>
           )}
 
           {d!.lowStock.length > 0 && (
@@ -160,15 +166,27 @@ export default function Dashboard() {
                 </table>
               </div>
             )}
-            <p style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link className="mini-link" href="/members">Members</Link>
-              <Link className="mini-link" href="/bar">Bar tabs</Link>
-              <Link className="mini-link" href="/shop">Shop</Link>
-              <Link className="mini-link" href="/invoices">Invoices</Link>
-              <Link className="mini-link" href="/expenses">Expenses</Link>
-              <Link className="mini-link" href="/payroll">Payroll</Link>
-              <Link className="mini-link" href="/shifts">Staff rota</Link>
-            </p>
+          </section>
+
+          <section className="block">
+            <div className="sec-head"><h2>Run the club</h2></div>
+            <div className="jump-grid">
+              {[
+                { href: "/members", title: "Members", note: "Plans, renewals, sign-ins" },
+                { href: "/bookings", title: "Bookings", note: "Every court, every day" },
+                { href: "/bar", title: "Bar tabs", note: "Open tabs and settling" },
+                { href: "/shop", title: "Shop", note: "Counter and online orders" },
+                { href: "/invoices", title: "Invoices", note: "Bills sent and paid" },
+                { href: "/expenses", title: "Expenses", note: "What the club spends" },
+                { href: "/payroll", title: "Payroll", note: "Staff pay, monthly" },
+                { href: "/shifts", title: "Staff rota", note: "Who is on, and when" },
+              ].map((j) => (
+                <Link className="jump-card" href={j.href} key={j.href}>
+                  <span><b>{j.title}</b><span>{j.note}</span></span>
+                  <span className="j-arrow" aria-hidden="true">→</span>
+                </Link>
+              ))}
+            </div>
           </section>
         </>
       )}
