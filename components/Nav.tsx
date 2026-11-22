@@ -158,6 +158,19 @@ export default function Nav() {
                 Sign out
               </button>
             </>
+          ) : isLanding ? (
+            <>
+              <Link className="btn btn-paper" href="/member-login">
+                Member sign-in
+              </Link>
+              <Link
+                className="btn btn-ink"
+                href="/login"
+                title="Staff portal sign in"
+              >
+                Staff sign-in
+              </Link>
+            </>
           ) : (
             <>
               <Link className="nav-signin-link" href="/member-login">
@@ -249,6 +262,25 @@ export default function Nav() {
                   Sign out
                 </button>
               </>
+            ) : isLanding ? (
+              <div className="nav-mobile-auth-grid">
+                <Link
+                  href="/member-login"
+                  className="btn btn-paper"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={() => setOpen(false)}
+                >
+                  Member sign-in
+                </Link>
+                <Link
+                  href="/login"
+                  className="btn btn-ink"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={() => setOpen(false)}
+                >
+                  Staff sign-in
+                </Link>
+              </div>
             ) : (
               <div className="nav-mobile-auth-grid">
                 <Link

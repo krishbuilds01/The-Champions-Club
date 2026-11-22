@@ -96,9 +96,9 @@ input:focus, select:focus { border-color: var(--pine); outline: none; box-shadow
   margin: 0 auto;
   padding: 0 32px;
   height: 74px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
   gap: 28px;
   background: none;
   border: 0;
@@ -112,6 +112,7 @@ input:focus, select:focus { border-color: var(--pine); outline: none; box-shadow
   text-decoration: none;
   color: #fff;
   white-space: nowrap;
+  justify-self: start;
 }
 .brand-mark {
   display: grid;
@@ -153,9 +154,9 @@ input:focus, select:focus { border-color: var(--pine); outline: none; box-shadow
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 26px;
-  margin-left: auto;
-  margin-right: 8px;
+  justify-content: center;
+  gap: 28px;
+  margin: 0 auto;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -189,6 +190,7 @@ input:focus, select:focus { border-color: var(--pine); outline: none; box-shadow
 .nav-end {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: 12px;
   flex-shrink: 0;
 }
