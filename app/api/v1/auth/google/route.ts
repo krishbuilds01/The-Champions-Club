@@ -16,14 +16,18 @@ export async function GET(req: NextRequest) {
   const plan = req.nextUrl.searchParams.get("plan");
 
   const id = process.env.GOOGLE_CLIENT_ID?.trim();
+  const secret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+  const hasPlaceholderCredentials =
+    id?.toLowerCase().includes("your-google-client-id") ||
+    secret?.toLowerCase().includes("your-google-client-secret");
   const jar = await cookies();
   const opts = { httpOnly: true, sameSite: "lax" as const, path: "/", maxAge: 600 };
   jar.set("cc_gtype", "member", opts);
   jar.set("cc_gnext", next, opts);
   if (plan) jar.set("cc_gplan", plan, opts);
 
-  // If real Google Client ID is configured, proceed with official Google OAuth flow
-  if (id) {
+  // Only start OAuth when both real Google web-client credentials are configured.
+  if (id && secret && !hasPlaceholderCredentials) {
     const state = crypto.randomBytes(16).toString("hex");
     jar.set("cc_gstate", state, opts);
     const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");

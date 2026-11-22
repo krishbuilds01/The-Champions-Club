@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api, ApiClientError } from "@/lib/api";
-import ClubLogo from "@/components/ClubLogo";
 
 export default function MemberAuth() {
   const [tab, setTab] = useState<"login" | "signup">("login");
@@ -95,7 +94,6 @@ export default function MemberAuth() {
     <main className="auth-page member-auth-page" data-tab={tab}>
       <aside className="auth-aside">
         <Link className="auth-aside-brand" href="/">
-          <ClubLogo size={48} />
           <span>The Champions Club</span>
         </Link>
         <div className="auth-aside-copy">
@@ -108,7 +106,9 @@ export default function MemberAuth() {
 
       <section className="auth-main">
         <div className="auth-content member-auth-content">
-          <div className="auth-mobile-brand"><ClubLogo size={38} variant="light" /></div>
+          <div className="auth-mobile-brand">
+            <Link href="/" style={{ color: "inherit", textDecoration: "none" }}>The Champions Club</Link>
+          </div>
           <div className="auth-heading">
             <p className="auth-eyebrow">Member portal</p>
             <h1>{tab === "login" ? "Welcome back" : "Join the club"}</h1>

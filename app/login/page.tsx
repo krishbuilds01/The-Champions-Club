@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api, ApiClientError } from "@/lib/api";
-import ClubLogo from "@/components/ClubLogo";
 import type { StaffMemberPinDTO } from "@/lib/types";
 
 type RoleOption = {
@@ -96,7 +95,6 @@ export default function Login() {
     <main className="auth-page staff-auth-page">
       <aside className="auth-aside">
         <Link className="auth-aside-brand" href="/">
-          <ClubLogo size={48} />
           <span>The Champions Club</span>
         </Link>
         <div className="auth-aside-copy">
@@ -109,7 +107,9 @@ export default function Login() {
 
       <section className="auth-main">
         <div className="auth-content">
-          <div className="auth-mobile-brand"><ClubLogo size={38} variant="light" /></div>
+          <div className="auth-mobile-brand">
+            <Link href="/" style={{ color: "inherit", textDecoration: "none" }}>The Champions Club</Link>
+          </div>
           <div className="auth-heading">
             <p className="auth-eyebrow">Welcome back</p>
             <h1>Staff sign in</h1>

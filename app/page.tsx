@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import DemoRazorpayModal from "@/components/DemoRazorpayModal";
-import ClubLogo from "@/components/ClubLogo";
 import type { MemberSessionDTO } from "@/lib/types";
 
 type IconName = "arrow" | "menu" | "close" | "court" | "cup" | "bag" | "clock" | "pin" | "instagram";
@@ -33,7 +32,6 @@ const facilities = [
 ];
 
 export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [email, setEmail] = useState("");
   const [member, setMember] = useState<MemberSessionDTO | null>(null);
@@ -99,96 +97,16 @@ export default function Home() {
 
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    setMenuOpen(false);
   }
 
   return (
     <div className="make-landing min-h-screen bg-[#f2f0e8] text-[#163021]">
-      <header className="absolute inset-x-0 top-0 z-40 border-b border-white/15 text-white">
-        <div className="mx-auto flex h-[84px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
-          <button onClick={() => scrollTo("home")} className="flex items-center gap-3" aria-label="Champions Club home">
-            <ClubLogo size={42} />
-            <div className="text-left"><p className="font-display text-[19px] font-bold uppercase leading-none tracking-wide">Champions</p><p className="mt-1 text-[8px] font-semibold uppercase tracking-[.34em] text-white/55">The club</p></div>
-          </button>
-          <nav className="hidden items-center gap-8 lg:flex">
-            <Link href="/courts" className="text-xs font-semibold text-white/75 transition hover:text-white">Courts</Link>
-            <Link href="/shop" className="text-xs font-semibold text-white/75 transition hover:text-white">Shop</Link>
-            <Link href="/bar" className="text-xs font-semibold text-white/75 transition hover:text-white">Bar &amp; Café</Link>
-            <Link href="/trial" className="text-xs font-semibold text-white/75 transition hover:text-white">Book a trial</Link>
-            <Link href="/#membership" className="text-xs font-semibold text-white/75 transition hover:text-white">Membership</Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            {member ? (
-              <>
-                <Link href="/courts" className="member-chip hidden sm:inline-flex" title="View courts and membership status">
-                  <span>⚡ {member.name}</span>
-                  <span className="chip-tier">{member.plan ? member.plan.name : "No Plan"}</span>
-                </Link>
-                <button onClick={handleMemberLogout} className="hidden text-xs font-semibold text-white/75 hover:text-white sm:block">
-                  Sign out
-                </button>
-                <Link href="/courts" className="hidden rounded-full bg-[#dfff45] px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-[#173020] transition hover:bg-white sm:block">
-                  Book Courts
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/member-login" className="hidden text-xs font-semibold text-white/75 hover:text-white sm:block">
-                  Member sign-in
-                </Link>
-                <Link href="/member-login?tab=signup" className="hidden rounded-full bg-[#dfff45] px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-[#173020] transition hover:bg-white sm:block">
-                  Join the club
-                </Link>
-                <Link href="/login" className="rounded-full bg-white px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] font-bold uppercase tracking-wider text-[#173020] shadow-md transition hover:bg-[#dfff45]">
-                  Staff
-                </Link>
-              </>
-            )}
-            <button onClick={() => setMenuOpen(!menuOpen)} className="grid h-10 w-10 place-items-center rounded-full border border-white/25 lg:hidden" aria-label="Toggle menu"><Icon name={menuOpen ? "close" : "menu"} /></button>
-          </div>
-        </div>
-        {menuOpen && (
-          <div className="border-t border-white/10 bg-[#132b1d] px-5 py-6 lg:hidden">
-            {[["Courts", "/courts"], ["Shop", "/shop"], ["Bar & Café", "/bar"], ["Book a trial", "/trial"], ["Membership", "/#membership"]].map(([item, href]) => (
-              <Link key={item} href={href} onClick={() => setMenuOpen(false)} className="block w-full border-b border-white/10 py-4 text-left font-display text-xl font-bold uppercase">
-                {item}
-              </Link>
-            ))}
-            {member ? (
-              <>
-                <Link href="/courts" onClick={() => setMenuOpen(false)} className="mt-4 block w-full border-b border-white/10 py-3 text-left font-display text-lg font-bold uppercase text-[#dfff45]">
-                  ⚡ {member.name} ({member.plan ? member.plan.name : "No Plan"})
-                </Link>
-                <Link href="/courts" onClick={() => setMenuOpen(false)} className="mt-4 block w-full rounded-full bg-[#dfff45] py-4 text-center text-xs font-bold uppercase tracking-wider text-[#173020]">
-                  Book Courts
-                </Link>
-                <button onClick={() => { handleMemberLogout(); setMenuOpen(false); }} className="mt-3 block w-full py-2 text-center text-xs font-semibold text-white/70">
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/member-login" onClick={() => setMenuOpen(false)} className="mt-4 block w-full border-b border-white/10 py-3 text-left font-display text-lg font-bold uppercase">
-                  Member sign-in
-                </Link>
-                <Link href="/member-login?tab=signup" onClick={() => setMenuOpen(false)} className="mt-4 block w-full rounded-full bg-[#dfff45] py-4 text-center text-xs font-bold uppercase tracking-wider text-[#173020]">
-                  Join the club
-                </Link>
-                <Link href="/login" onClick={() => setMenuOpen(false)} className="mt-3 block w-full rounded-full bg-white py-4 text-center text-xs font-bold uppercase tracking-wider text-[#173020]">
-                  Staff sign-in
-                </Link>
-              </>
-            )}
-          </div>
-        )}
-      </header>
-
       <main>
-        <section id="home" className="relative flex min-h-[760px] items-end overflow-hidden bg-[#10251a] text-white lg:min-h-screen">
+        <section id="home" className="relative flex min-h-[700px] items-end overflow-hidden bg-[#10251a] text-white lg:min-h-[calc(100vh-74px)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/hero.jpg" alt="Tennis player on court at Champions Club" className="absolute inset-0 h-full w-full object-cover object-[62%_center]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,28,17,.94)_0%,rgba(9,30,18,.74)_35%,rgba(9,29,18,.1)_70%),linear-gradient(0deg,rgba(7,23,14,.72)_0%,transparent_45%)]" />
-          <div className="relative mx-auto w-full max-w-[1440px] px-5 pb-16 pt-36 sm:px-8 lg:px-12 lg:pb-20">
+          <div className="relative mx-auto w-full max-w-[1440px] px-5 pb-16 pt-24 sm:px-8 lg:px-12 lg:pb-20">
             <div className="max-w-[720px]">
               <div className="mb-7 flex items-center gap-3"><span className="h-px w-10 bg-[#dfff45]" /><span className="text-[10px] font-bold uppercase tracking-[.28em] text-[#dfff45]">Courts · Kitchen · Community</span></div>
               <h1 className="font-display text-[64px] font-bold uppercase leading-[.84] tracking-[-.035em] sm:text-[86px] lg:text-[118px]">Play hard.<br /><span className="text-[#dfff45]">Stay longer.</span></h1>

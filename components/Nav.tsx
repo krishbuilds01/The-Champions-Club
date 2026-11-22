@@ -4,29 +4,37 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { api } from "@/lib/api";
-import ClubLogo from "@/components/ClubLogo";
 import type { MemberSessionDTO, StaffDTO } from "@/lib/types";
 
 const publicLinks = [
   { href: "/courts", label: "Courts" },
-  { href: "/#membership", label: "Membership" },
   { href: "/shop", label: "Shop" },
   { href: "/bar", label: "Bar & Café" },
+  { href: "/trial", label: "Book a trial" },
+  { href: "/#membership", label: "Membership" },
 ];
+
 const staffLinksFor = (role: StaffDTO["role"]) => {
   const desk = [
     { href: "/bookings", label: "Bookings" },
     { href: "/members", label: "Members" },
     { href: "/enquiries", label: "Enquiries" },
   ];
-  if (role === "OWNER") return [{ href: "/dashboard", label: "Dashboard" }, ...desk, { href: "/bar", label: "Bar" }, { href: "/shop", label: "Shop" }];
+  if (role === "OWNER")
+    return [
+      { href: "/dashboard", label: "Dashboard" },
+      ...desk,
+      { href: "/bar", label: "Bar" },
+      { href: "/shop", label: "Shop" },
+    ];
   if (role === "FRONT_DESK" || role === "STAFF") return desk;
   if (role === "BAR") return [{ href: "/bar", label: "Bar & Cafeteria" }];
   return [{ href: "/shop", label: "Pro Shop" }];
 };
+
 const roleLabel: Record<StaffDTO["role"], string> = {
   OWNER: "Owner",
-  FRONT_DESK: "Club staff",
+  FRONT_DESK: "Front desk",
   STAFF: "Club staff",
   BAR: "Bar staff",
   SHOP: "Shop staff",
@@ -79,8 +87,10 @@ export default function Nav() {
         { href: "/member", label: "My Club" },
         { href: "/shop", label: "Shop" },
         { href: "/bar", label: "Bar & Café" },
+        { href: "/#membership", label: "Membership" },
       ]
     : publicLinks;
+
   const isCurrent = (href: string) =>
     href.startsWith("/#")
       ? path === "/"
@@ -90,39 +100,80 @@ export default function Nav() {
     <header className="nav">
       <div className="nav-in">
         <Link className="brand" href="/" aria-label="The Champions Club, home">
-          <ClubLogo size={38} />
-          <span className="brand-words"><b>Champions</b><small>The club</small></span>
+          <span className="brand-words">
+            <b>Champions</b>
+            <small>The Club</small>
+          </span>
         </Link>
-        <nav className="nav-links" aria-label="Club">
+
+        <nav className="nav-links" aria-label="Club Navigation">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} aria-current={isCurrent(l.href) ? "page" : undefined}>{l.label}</Link>
+            <Link
+              key={l.href}
+              href={l.href}
+              aria-current={isCurrent(l.href) ? "page" : undefined}
+            >
+              {l.label}
+            </Link>
           ))}
         </nav>
+
         <div className="nav-end">
           {staff ? (
             <>
-              <span className="staff-chip">{staff.name}<span className="chip-role">{roleLabel[staff.role]}</span></span>
-              <button className="btn btn-quiet" onClick={signStaffOut}>Sign out</button>
+              <span className="staff-chip">
+                {staff.name}
+                <span className="chip-role">{roleLabel[staff.role]}</span>
+              </span>
+              <button
+                type="button"
+                className="btn btn-quiet"
+                onClick={signStaffOut}
+              >
+                Sign out
+              </button>
             </>
           ) : member ? (
             <>
-              <Link href="/member" className="member-chip" title="View my club portal & bookings">
+              <Link
+                href="/member"
+                className="member-chip"
+                title="View my club portal & bookings"
+              >
                 <span>⚡ {member.name}</span>
-                <span className="chip-tier">{member.plan ? member.plan.name : "No Plan"}</span>
+                <span className="chip-tier">
+                  {member.plan ? member.plan.name : "Free"}
+                </span>
               </Link>
-              <button className="btn btn-quiet" onClick={signMemberOut}>Sign out</button>
+              <Link className="btn btn-ink" href="/courts">
+                Book a court
+              </Link>
+              <button
+                type="button"
+                className="btn btn-quiet"
+                onClick={signMemberOut}
+              >
+                Sign out
+              </button>
             </>
           ) : (
             <>
-              <Link className="btn btn-paper" href="/member-login">Member sign-in</Link>
-              <Link className="btn btn-quiet text-xs opacity-60" href="/login" title="Staff portal sign in">Staff</Link>
+              <Link className="nav-signin-link" href="/member-login">
+                Member sign-in
+              </Link>
+              <Link
+                className="btn btn-quiet nav-staff-link"
+                href="/login"
+                title="Staff portal sign in"
+              >
+                Staff
+              </Link>
+              <Link className="btn btn-ink" href="/member-login?tab=signup">
+                Join the club
+              </Link>
             </>
           )}
-          {member ? (
-            <Link className="btn btn-ink" href="/courts">Book a court</Link>
-          ) : (
-            <Link className="btn btn-ink" href="/member-login?tab=signup">Join the club</Link>
-          )}
+
           <button
             className="menu-btn"
             type="button"
@@ -135,29 +186,96 @@ export default function Nav() {
           </button>
         </div>
       </div>
+
       {open && (
         <nav className="nav-mobile" id="club-mobile-navigation" aria-label="Club">
-          {links.map((l) => (
-            <Link key={l.href} href={l.href} aria-current={isCurrent(l.href) ? "page" : undefined}>{l.label}</Link>
-          ))}
-          {member ? (
-            <Link href="/courts">Book a court</Link>
-          ) : (
-            <Link href="/member-login?tab=signup">Join the club</Link>
-          )}
-          {staff ? (
-            <>
-              <span className="mobile-chip">{staff.name} · {roleLabel[staff.role]}</span>
-              <button className="mobile-signout" onClick={signStaffOut}>Sign out</button>
-            </>
-          ) : member ? (
-            <button className="mobile-signout" onClick={signMemberOut}>Sign out ({member.name})</button>
-          ) : (
-            <div className="flex flex-col gap-2 pt-2">
-              <Link href="/member-login">Member sign-in</Link>
-              <Link href="/login" className="text-xs opacity-60">Staff sign-in</Link>
-            </div>
-          )}
+          <div className="nav-mobile-links">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={isCurrent(l.href) ? "page" : undefined}
+                onClick={() => setOpen(false)}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="nav-mobile-actions">
+            {staff ? (
+              <>
+                <div className="mobile-chip">
+                  {staff.name} · {roleLabel[staff.role]}
+                </div>
+                <button
+                  type="button"
+                  className="mobile-signout"
+                  onClick={() => {
+                    setOpen(false);
+                    signStaffOut();
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : member ? (
+              <>
+                <Link
+                  href="/member"
+                  className="mobile-chip"
+                  onClick={() => setOpen(false)}
+                >
+                  ⚡ {member.name} ({member.plan ? member.plan.name : "Free"})
+                </Link>
+                <Link
+                  href="/courts"
+                  className="btn btn-ink"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={() => setOpen(false)}
+                >
+                  Book a court
+                </Link>
+                <button
+                  type="button"
+                  className="mobile-signout"
+                  onClick={() => {
+                    setOpen(false);
+                    signMemberOut();
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <div className="nav-mobile-auth-grid">
+                <Link
+                  href="/member-login"
+                  className="btn btn-paper"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={() => setOpen(false)}
+                >
+                  Member sign-in
+                </Link>
+                <Link
+                  href="/member-login?tab=signup"
+                  className="btn btn-ink"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={() => setOpen(false)}
+                >
+                  Join the club
+                </Link>
+                <Link
+                  href="/login"
+                  className="btn btn-quiet"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={() => setOpen(false)}
+                >
+                  Staff sign-in
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
       )}
     </header>
